@@ -31,7 +31,7 @@
 
         "SECTION_HEADER_CONCURRENCY"    : "同時接続制限",
         "SECTION_HEADER_LOAD_BALANCING" : "ロードバラシング",
-        "SECTION_HEADER_GUACD"          : "Guacamoleプロキシパラメータ (guacd)"
+        "SECTION_HEADER_GUACD"          : "Webgateプロキシパラメータ gated"
 
     },
 

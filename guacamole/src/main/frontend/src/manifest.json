@@ -1,7 +1,7 @@
 {
-    "name": "Guacamole",
-    "short_name": "Guacamole",
-    "description": "Guacamole",
+    "name": "Webgate",
+    "short_name": "Webgate",
+    "description": "Webgate",
     "start_url": ".",
     "display": "standalone",
     "icons": [

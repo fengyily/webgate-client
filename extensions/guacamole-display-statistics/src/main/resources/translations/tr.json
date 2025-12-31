@@ -1,10 +1,10 @@
 {
     "CLIENT" : {
 
-        "FIELD_HEADER_CLIENT_FRAMERATE"  : "Guacamole (İstemci):",
+        "FIELD_HEADER_CLIENT_FRAMERATE"  : "Webgate (İstemci):",
         "FIELD_HEADER_DESKTOP_FRAMERATE" : "Uzak Masaüstü:",
         "FIELD_HEADER_DROP_FRAMERATE"    : "Düşür:",
-        "FIELD_HEADER_SERVER_FRAMERATE"  : "Guacamole (Sunucu):",
+        "FIELD_HEADER_SERVER_FRAMERATE"  : "Webgate (Sunucu):",
 
         "INFO_FRAMERATE" : "{VALUE} fps"
 

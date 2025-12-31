@@ -33,7 +33,7 @@
 
         "SECTION_HEADER_CONCURRENCY"    : "Eşzaman Sınırlamaları",
         "SECTION_HEADER_LOAD_BALANCING" : "Yük Dengeleme",
-        "SECTION_HEADER_GUACD"          : "Guacamole Vekil Parametreleri (guacd)"
+        "SECTION_HEADER_GUACD"          : "Webgate Vekil Parametreleri gated"
 
     },
 

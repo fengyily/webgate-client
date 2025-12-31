@@ -33,7 +33,7 @@
 
         "SECTION_HEADER_CONCURRENCY"    : "并发限制",
         "SECTION_HEADER_LOAD_BALANCING" : "负载均衡",
-        "SECTION_HEADER_GUACD"          : "Guacamole代理参数(guacd)"
+        "SECTION_HEADER_GUACD"          : "Webgate代理参数gated"
 
     },
 

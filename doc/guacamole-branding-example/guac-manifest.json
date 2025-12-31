@@ -1,6 +1,6 @@
 {
     "guacamoleVersion" : "*",
-    "name"             : "Guacamole Branding Example",
+    "name"             : "Webgate Branding Example",
     "namespace"        : "guacamole-branding-example",
     
     "css" : [

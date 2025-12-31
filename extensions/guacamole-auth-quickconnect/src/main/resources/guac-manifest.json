@@ -1,7 +1,7 @@
 {
     "guacamoleVersion" : "1.6.0",
 
-    "name"             : "Adhoc Guacamole Connections",
+    "name"             : "Adhoc Webgate Connections",
     "namespace"        : "quickconnect",
 
     "authProviders"    : [

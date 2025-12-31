@@ -34,7 +34,7 @@
 
         "SECTION_HEADER_CONCURRENCY"    : "Limites de simultaneidade",
         "SECTION_HEADER_LOAD_BALANCING" : "Load Balancing",
-        "SECTION_HEADER_GUACD"          : "Parâmetros do Guacamole Proxy (guacd)"
+        "SECTION_HEADER_GUACD"          : "Parâmetros do Webgate Proxy gated"
 
     },
 

@@ -32,7 +32,7 @@
 
         "SECTION_HEADER_CONCURRENCY"    : "Совместное использование",
         "SECTION_HEADER_LOAD_BALANCING" : "Балансировка нагрузки",
-        "SECTION_HEADER_GUACD"          : "Параметры сервера Guacamole (guacd)"
+        "SECTION_HEADER_GUACD"          : "Параметры сервера Webgate gated"
 
     },
 

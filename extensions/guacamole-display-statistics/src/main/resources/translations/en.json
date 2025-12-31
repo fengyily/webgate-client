@@ -1,10 +1,10 @@
 {
     "CLIENT" : {
 
-        "FIELD_HEADER_CLIENT_FRAMERATE"  : "Guacamole (Client):",
+        "FIELD_HEADER_CLIENT_FRAMERATE"  : "Webgate (Client):",
         "FIELD_HEADER_DESKTOP_FRAMERATE" : "Remote Desktop:",
         "FIELD_HEADER_DROP_FRAMERATE"    : "Drop:",
-        "FIELD_HEADER_SERVER_FRAMERATE"  : "Guacamole (Server):",
+        "FIELD_HEADER_SERVER_FRAMERATE"  : "Webgate (Server):",
 
         "INFO_FRAMERATE" : "{VALUE} fps"
 

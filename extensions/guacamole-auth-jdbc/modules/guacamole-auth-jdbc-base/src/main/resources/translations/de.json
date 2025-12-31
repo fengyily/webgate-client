@@ -33,7 +33,7 @@
 
         "SECTION_HEADER_CONCURRENCY"    : "Verbindungslimite",
         "SECTION_HEADER_LOAD_BALANCING" : "Lastverteilung",
-        "SECTION_HEADER_GUACD"          : "Guacamole Proxy Parameter (guacd)"
+        "SECTION_HEADER_GUACD"          : "Webgate Proxy Parameter gated"
 
     },
 
