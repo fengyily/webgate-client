@@ -84,16 +84,16 @@
                         </ul>
                     </guac-menu>
                 </div>
-                <!-- Quick action buttons -->
+                <!-- Quick action buttons: Collapse (gray) | Fullscreen (blue) | Disconnect (red) -->
                 <div class="header-actions">
+                    <button class="action-btn collapse-btn" ng-click="menu.shown = false" title="{{'CLIENT.ACTION_COLLAPSE_MENU' | translate}}">
+                        <img class="action-icon" src="images/arrows/left.svg" alt="">
+                    </button>
                     <button class="action-btn fullscreen-btn" ng-click="toggleFullscreen()" title="{{'CLIENT.ACTION_FULLSCREEN' | translate}}">
                         <img class="action-icon" src="images/fullscreen.svg" alt="">
                     </button>
                     <button class="action-btn disconnect-btn" ng-click="confirmDisconnect()" title="{{'CLIENT.ACTION_DISCONNECT' | translate}}">
                         <img class="action-icon" src="images/action-icons/guac-logout.svg" alt="">
-                    </button>
-                    <button class="action-btn collapse-btn" ng-click="menu.shown = false" title="{{'CLIENT.ACTION_COLLAPSE_MENU' | translate}}">
-                        <img class="action-icon" src="images/arrows/left.svg" alt="">
                     </button>
                 </div>
             </div>

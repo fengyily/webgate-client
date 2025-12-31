@@ -179,6 +179,15 @@ body.client {
     transform: scale(1.05);
 }
 
+.client .menu .header .collapse-btn {
+    background: #4a4a4a;
+}
+
+.client .menu .header .collapse-btn:hover {
+    background: #5a5a5a;
+    transform: scale(1.05);
+}
+
 /* SFTP item styling */
 .sftp-item {
     padding: 8px 12px;

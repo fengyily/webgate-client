@@ -40,6 +40,7 @@ angular.module('client').controller('clientController', ['$scope', '$routeParams
     const dataSourceService      = $injector.get('dataSourceService');
     const guacClientManager      = $injector.get('guacClientManager');
     const guacFullscreen         = $injector.get('guacFullscreen');
+    const guacNotification       = $injector.get('guacNotification');
     const iconService            = $injector.get('iconService');
     const preferenceService      = $injector.get('preferenceService');
     const requestService         = $injector.get('requestService');
@@ -712,6 +713,38 @@ angular.module('client').controller('clientController', ['$scope', '$routeParams
 
         // Hide menu
         $scope.menu.shown = false;
+
+    };
+
+    /**
+     * Shows a confirmation dialog before disconnecting the client.
+     */
+    $scope.confirmDisconnect = function confirmDisconnect() {
+
+        // Action to cancel the disconnect
+        var CANCEL_ACTION = {
+            name     : 'CLIENT.ACTION_CANCEL',
+            callback : function cancelCallback() {
+                guacNotification.showStatus(false);
+            }
+        };
+
+        // Action to confirm and proceed with disconnect
+        var CONFIRM_DISCONNECT_ACTION = {
+            name     : 'CLIENT.ACTION_CONFIRM_DISCONNECT',
+            className: 'danger',
+            callback : function confirmCallback() {
+                guacNotification.showStatus(false);
+                $scope.disconnect();
+            }
+        };
+
+        // Show confirmation dialog
+        guacNotification.showStatus({
+            title   : 'CLIENT.DIALOG_HEADER_CONFIRM_DISCONNECT',
+            text    : { key: 'CLIENT.TEXT_CONFIRM_DISCONNECT' },
+            actions : [CONFIRM_DISCONNECT_ACTION, CANCEL_ACTION]
+        });
 
     };
 
