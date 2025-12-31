@@ -1,0 +1,149 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+#
+# Dockerfile for guacamole-client (优化版本 - 无数据库支持)
+#
+
+# Use args for Tomcat image label to allow image builder to choose alternatives
+ARG TOMCAT_VERSION=9
+ARG TOMCAT_JRE=jdk21
+
+# =========================================
+# Stage 1: Builder
+# =========================================
+FROM maven:3-eclipse-temurin-21 AS builder
+
+# Build environment variables
+ENV BUILD_DIR=/tmp/guacamole-docker-BUILD
+
+# Arbitrary arguments for maven build
+# 跳过测试，排除 JDBC 相关模块
+ARG MAVEN_ARGUMENTS="-DskipTests=true -pl !extensions/guacamole-auth-jdbc"
+
+# ===== 优化1: 先复制 pom.xml 利用 Docker 层缓存 =====
+# 只有当 pom.xml 改变时才会重新下载依赖
+WORKDIR $BUILD_DIR
+
+# 复制根 pom.xml
+COPY pom.xml .
+
+# 复制所有模块的 pom.xml（保持目录结构）
+COPY guacamole/pom.xml guacamole/
+COPY guacamole-common/pom.xml guacamole-common/
+COPY guacamole-common-js/pom.xml guacamole-common-js/
+COPY guacamole-ext/pom.xml guacamole-ext/
+COPY extensions/pom.xml extensions/
+COPY extensions/guacamole-auth-ban/pom.xml extensions/guacamole-auth-ban/
+COPY extensions/guacamole-auth-duo/pom.xml extensions/guacamole-auth-duo/
+COPY extensions/guacamole-auth-header/pom.xml extensions/guacamole-auth-header/
+COPY extensions/guacamole-auth-json/pom.xml extensions/guacamole-auth-json/
+COPY extensions/guacamole-auth-ldap/pom.xml extensions/guacamole-auth-ldap/
+COPY extensions/guacamole-auth-quickconnect/pom.xml extensions/guacamole-auth-quickconnect/
+COPY extensions/guacamole-auth-restrict/pom.xml extensions/guacamole-auth-restrict/
+COPY extensions/guacamole-auth-sso/pom.xml extensions/guacamole-auth-sso/
+COPY extensions/guacamole-auth-sso/modules/guacamole-auth-sso-base/pom.xml extensions/guacamole-auth-sso/modules/guacamole-auth-sso-base/
+COPY extensions/guacamole-auth-sso/modules/guacamole-auth-sso-cas/pom.xml extensions/guacamole-auth-sso/modules/guacamole-auth-sso-cas/
+COPY extensions/guacamole-auth-sso/modules/guacamole-auth-sso-dist/pom.xml extensions/guacamole-auth-sso/modules/guacamole-auth-sso-dist/
+COPY extensions/guacamole-auth-sso/modules/guacamole-auth-sso-openid/pom.xml extensions/guacamole-auth-sso/modules/guacamole-auth-sso-openid/
+COPY extensions/guacamole-auth-sso/modules/guacamole-auth-sso-saml/pom.xml extensions/guacamole-auth-sso/modules/guacamole-auth-sso-saml/
+COPY extensions/guacamole-auth-sso/modules/guacamole-auth-sso-ssl/pom.xml extensions/guacamole-auth-sso/modules/guacamole-auth-sso-ssl/
+COPY extensions/guacamole-auth-totp/pom.xml extensions/guacamole-auth-totp/
+COPY extensions/guacamole-display-statistics/pom.xml extensions/guacamole-display-statistics/
+COPY extensions/guacamole-history-recording-storage/pom.xml extensions/guacamole-history-recording-storage/
+COPY extensions/guacamole-vault/pom.xml extensions/guacamole-vault/
+COPY extensions/guacamole-vault/modules/guacamole-vault-base/pom.xml extensions/guacamole-vault/modules/guacamole-vault-base/
+COPY extensions/guacamole-vault/modules/guacamole-vault-dist/pom.xml extensions/guacamole-vault/modules/guacamole-vault-dist/
+COPY extensions/guacamole-vault/modules/guacamole-vault-ksm/pom.xml extensions/guacamole-vault/modules/guacamole-vault-ksm/
+COPY doc/guacamole-example/pom.xml doc/guacamole-example/
+COPY doc/guacamole-playback-example/pom.xml doc/guacamole-playback-example/
+
+# 复制 frontend 的 package.json (用于 npm 依赖缓存)
+COPY guacamole/src/main/frontend/package.json guacamole/src/main/frontend/
+COPY guacamole/src/main/frontend/package-lock.json guacamole/src/main/frontend/
+COPY guacamole-common-js/package.json guacamole-common-js/
+COPY guacamole-common-js/package-lock.json guacamole-common-js/
+
+# 下载依赖（此层会被缓存，除非 pom.xml 改变）
+RUN mvn dependency:go-offline -B $MAVEN_ARGUMENTS || true
+
+# ===== 优化2: 复制源代码并构建 =====
+COPY . .
+
+# 多线程构建加速
+RUN mvn $MAVEN_ARGUMENTS -T 1C package
+
+# ===== 优化3: 使用精简的安装脚本 =====
+# 复制 webapp
+RUN mkdir -p /opt/guacamole/webapp && \
+    cp guacamole/target/*.war /opt/guacamole/webapp/guacamole.war
+
+# 复制扩展（排除 JDBC 相关）
+RUN mkdir -p /opt/guacamole/extensions && \
+    find extensions/ -path "**/target/*.tar.gz" ! -path "*jdbc*" -exec tar -xzf "{}" \
+        -C /opt/guacamole/extensions \
+        --xform='s#^\([^/]*\)-[0-9]\+\.[0-9]\+\.[0-9]\+#\1#g' \
+        --xform='s#-[0-9]\+\.[0-9]\+\.[0-9]\+\(\.jar$\)#\1#g' \
+        ";"
+
+# Add configuration scripts
+COPY guacamole-docker/bin/entrypoint.sh /opt/guacamole/bin/
+COPY guacamole-docker/entrypoint.d/ /opt/guacamole/entrypoint.d/
+COPY guacamole-docker/environment/ /opt/guacamole/environment/
+
+# 创建扩展映射（排除数据库相关）
+RUN mkdir -p /opt/guacamole/environment && \
+    for ext in BAN DUO HTTP_AUTH JSON LDAP QUICKCONNECT RESTRICT CAS OPENID SAML SSL_AUTH TOTP DISPLAY_STATISTICS RECORDING KSM; do \
+        mkdir -p "/opt/guacamole/environment/${ext}_/extensions" 2>/dev/null || true; \
+    done
+
+# =========================================
+# Stage 2: Runtime
+# =========================================
+FROM tomcat:9-jdk21
+
+# Install XMLStarlet for server.xml alterations
+RUN apt-get update -qq \
+    && apt-get install -y xmlstarlet \
+    && rm -rf /var/lib/apt/lists/*
+
+# This is where the build artifacts go in the runtime image
+WORKDIR /opt/guacamole
+
+# Copy artifacts from builder image into this image
+COPY --from=builder /opt/guacamole/ .
+
+# Create a new user guacamole
+ARG UID=1001
+ARG GID=1001
+RUN groupadd --gid $GID guacamole && \
+    useradd --system --create-home --shell /usr/sbin/nologin --uid $UID --gid $GID guacamole
+
+# Run with user guacamole
+USER guacamole
+
+# Environment variable defaults
+ENV BAN_ENABLED=true \
+    ENABLE_FILE_ENVIRONMENT_PROPERTIES=true \
+    GUACAMOLE_HOME=/etc/guacamole
+
+# Start Guacamole under Tomcat, listening on 0.0.0.0:8080
+EXPOSE 8080
+CMD ["/opt/guacamole/bin/entrypoint.sh"]
+

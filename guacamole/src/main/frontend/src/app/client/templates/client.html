@@ -45,8 +45,14 @@
         {{'CLIENT.TEXT_CLIENT_STATUS_UNSTABLE' | translate}}
     </div>
     
+    <!-- Menu overlay - click to close menu and apply changes -->
+    <div class="menu-overlay" ng-show="menu.shown" ng-click="closeMenu()"></div>
+
     <!-- Menu -->
     <div class="menu" ng-class="{open: menu.shown}" id="guac-menu">
+        <!-- Menu toggle handle - always visible for expanding menu -->
+        <div class="menu-handle" ng-click="menu.shown = !menu.shown"></div>
+        
         <div class="menu-content" ng-if="menu.shown" guac-touch-drag="menuDrag">
 
             <!-- Stationary header -->
@@ -78,16 +84,27 @@
                         </ul>
                     </guac-menu>
                 </div>
-                <guac-user-menu local-actions="clientMenuActions"></guac-user-menu>
+                <!-- Quick action buttons -->
+                <div class="header-actions">
+                    <button class="action-btn fullscreen-btn" ng-click="toggleFullscreen()" title="{{'CLIENT.ACTION_FULLSCREEN' | translate}}">
+                        <img class="action-icon" src="images/fullscreen.svg" alt="">
+                    </button>
+                    <button class="action-btn disconnect-btn" ng-click="confirmDisconnect()" title="{{'CLIENT.ACTION_DISCONNECT' | translate}}">
+                        <img class="action-icon" src="images/action-icons/guac-logout.svg" alt="">
+                    </button>
+                    <button class="action-btn collapse-btn" ng-click="menu.shown = false" title="{{'CLIENT.ACTION_COLLAPSE_MENU' | translate}}">
+                        <img class="action-icon" src="images/arrows/left.svg" alt="">
+                    </button>
+                </div>
             </div>
 
             <!-- Scrollable body -->
             <div class="menu-body" guac-touch-drag="visibleMenuDrag" guac-scroll="menu.scrollState">
 
-                <!-- Connection sharing -->
+                <!-- Connection sharing (hidden when not shared) -->
                 <div class="menu-section" id="share-links" ng-show="isShared()">
-                    <div class="content">
-                        <h3>{{'CLIENT.INFO_CONNECTION_SHARED' | translate}}</h3>
+                    <h3 class="section-title">{{'CLIENT.INFO_CONNECTION_SHARED' | translate}}</h3>
+                    <div class="section-content">
                         <p class="description"
                            translate="CLIENT.HELP_SHARE_LINK"
                            translate-values="{LINKS : getShareLinkCount()}"></p>
@@ -100,26 +117,17 @@
                     </div>
                 </div>
 
-                <!-- Clipboard -->
-                <div class="menu-section" id="clipboard-settings">
-                    <h3>{{'CLIENT.SECTION_HEADER_CLIPBOARD' | translate}}</h3>
-                    <div class="content">
-                        <p class="description">{{'CLIENT.HELP_CLIPBOARD' | translate}}</p>
-                        <guac-clipboard></guac-clipboard>
-                    </div>
-                </div>
-
-                <!-- Devices -->
-                <div class="menu-section" id="devices" ng-if="focusedClient.filesystems.length">
-                    <h3>{{'CLIENT.SECTION_HEADER_DEVICES' | translate}}</h3>
-                    <div class="content">
-                        <div class="device filesystem" ng-repeat="filesystem in focusedClient.filesystems" ng-click="showFilesystemMenu(filesystem)">
-                            {{filesystem.name}}
+                <!-- File Manager -->
+                <div class="menu-section" id="sftp-section" ng-if="focusedClient.filesystems.length">
+                    <h3 class="section-title">{{'CLIENT.SECTION_HEADER_SFTP' | translate}}</h3>
+                    <div class="section-content">
+                        <div class="sftp-item" ng-repeat="filesystem in focusedClient.filesystems" ng-click="showFilesystemMenu(filesystem)">
+                            <span class="sftp-icon">📁</span> {{filesystem.name}}
                         </div>
                     </div>
                 </div>
 
-                <!-- Connection parameters which may be modified while the connection is open -->
+                <!-- Connection parameters: Color Scheme, Font Name -->
                 <div class="menu-section connection-parameters" id="connection-settings" ng-if="focusedClient.protocol">
                     <guac-form namespace="getProtocolNamespace(focusedClient.protocol)"
                                content="focusedClient.forms"
@@ -128,66 +136,85 @@
                                model-only="true"></guac-form>
                 </div>
 
-                <!-- Input method -->
-                <div class="menu-section" id="keyboard-settings">
-                    <h3>{{'CLIENT.SECTION_HEADER_INPUT_METHOD' | translate}}</h3>
-                    <div class="content">
-
-                        <!-- No IME -->
-                        <div class="choice">
-                            <label><input id="ime-none" name="input-method" ng-change="closeMenu()" ng-model="menu.inputMethod" type="radio" value="none"> {{'CLIENT.NAME_INPUT_METHOD_NONE' | translate}}</label>
-                            <p class="caption"><label for="ime-none">{{'CLIENT.HELP_INPUT_METHOD_NONE' | translate}}</label></p>
+                <!-- Font Size -->
+                <div class="menu-section" id="font-size-section" ng-if="menu.connectionParameters['font-size'] !== undefined">
+                    <h3 class="section-title">{{'PROTOCOL_SSH.FIELD_HEADER_FONT_SIZE' | translate}}</h3>
+                    <div class="section-content">
+                        <div class="btn-group">
+                            <button class="setting-btn" ng-class="{'active': menu.connectionParameters['font-size'] === '10'}" 
+                                    ng-click="menu.connectionParameters['font-size'] = '10'">{{'PROTOCOL_SSH.FIELD_OPTION_FONT_SIZE_10' | translate}}</button>
+                            <button class="setting-btn" ng-class="{'active': menu.connectionParameters['font-size'] === '12' || menu.connectionParameters['font-size'] === ''}" 
+                                    ng-click="menu.connectionParameters['font-size'] = '12'">{{'PROTOCOL_SSH.FIELD_OPTION_FONT_SIZE_12' | translate}}</button>
+                            <button class="setting-btn" ng-class="{'active': menu.connectionParameters['font-size'] === '14'}" 
+                                    ng-click="menu.connectionParameters['font-size'] = '14'">{{'PROTOCOL_SSH.FIELD_OPTION_FONT_SIZE_14' | translate}}</button>
+                            <button class="setting-btn" ng-class="{'active': menu.connectionParameters['font-size'] === '18'}" 
+                                    ng-click="menu.connectionParameters['font-size'] = '18'">{{'PROTOCOL_SSH.FIELD_OPTION_FONT_SIZE_18' | translate}}</button>
+                            <button class="setting-btn" ng-class="{'active': menu.connectionParameters['font-size'] === '24'}" 
+                                    ng-click="menu.connectionParameters['font-size'] = '24'">{{'PROTOCOL_SSH.FIELD_OPTION_FONT_SIZE_24' | translate}}</button>
                         </div>
-
-                        <!-- Text input -->
-                        <div class="choice">
-                            <div class="figure"><label for="ime-text"><img src="images/settings/tablet-keys.svg" alt=""></label></div>
-                            <label><input id="ime-text" name="input-method" ng-change="closeMenu()" ng-model="menu.inputMethod" type="radio" value="text"> {{'CLIENT.NAME_INPUT_METHOD_TEXT' | translate}}</label>
-                            <p class="caption"><label for="ime-text">{{'CLIENT.HELP_INPUT_METHOD_TEXT' | translate}} </label></p>
-                        </div>
-
-                        <!-- Guac OSK -->
-                        <div class="choice">
-                            <label><input id="ime-osk" name="input-method" ng-change="closeMenu()" ng-model="menu.inputMethod" type="radio" value="osk"> {{'CLIENT.NAME_INPUT_METHOD_OSK' | translate}}</label>
-                            <p class="caption"><label for="ime-osk">{{'CLIENT.HELP_INPUT_METHOD_OSK' | translate}}</label></p>
-                        </div>
-
                     </div>
                 </div>
 
-                <!-- Mouse mode -->
+                <!-- Input Method -->
+                <div class="menu-section" id="input-settings">
+                    <h3 class="section-title">{{'CLIENT.SECTION_HEADER_INPUT_METHOD' | translate}}</h3>
+                    <div class="section-content">
+                        <div class="btn-group">
+                            <button class="setting-btn" 
+                                    ng-class="{'active': menu.inputMethod === 'none'}"
+                                    ng-click="menu.inputMethod = 'none'"
+                                    title="{{'CLIENT.HELP_INPUT_METHOD_NONE' | translate}}">
+                                {{'CLIENT.NAME_INPUT_METHOD_NONE' | translate}}
+                            </button>
+                            <button class="setting-btn"
+                                    ng-class="{'active': menu.inputMethod === 'text'}"
+                                    ng-click="menu.inputMethod = 'text'"
+                                    title="{{'CLIENT.HELP_INPUT_METHOD_TEXT' | translate}}">
+                                {{'CLIENT.NAME_INPUT_METHOD_TEXT' | translate}}
+                            </button>
+                            <button class="setting-btn"
+                                    ng-class="{'active': menu.inputMethod === 'osk'}"
+                                    ng-click="menu.inputMethod = 'osk'"
+                                    title="{{'CLIENT.HELP_INPUT_METHOD_OSK' | translate}}">
+                                {{'CLIENT.NAME_INPUT_METHOD_OSK' | translate}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mouse Emulation Mode -->
                 <div class="menu-section" id="mouse-settings">
-                    <h3>{{'CLIENT.SECTION_HEADER_MOUSE_MODE' | translate}}</h3>
-                    <div class="content">
-                        <p class="description">{{'CLIENT.HELP_MOUSE_MODE' | translate}}</p>
-
-                        <!-- Touchscreen -->
-                        <div class="choice">
-                            <input name="mouse-mode" ng-change="closeMenu()" ng-model="menu.emulateAbsoluteMouse" type="radio" ng-value="true" checked="checked" id="absolute">
-                            <div class="figure">
-                                <label for="absolute"><img src="images/settings/touchscreen.svg" alt="{{'CLIENT.NAME_MOUSE_MODE_ABSOLUTE' | translate}}"></label>
-                                <p class="caption"><label for="absolute">{{'CLIENT.HELP_MOUSE_MODE_ABSOLUTE' | translate}}</label></p>
-                            </div>
+                    <h3 class="section-title">{{'CLIENT.SECTION_HEADER_MOUSE_MODE' | translate}}</h3>
+                    <div class="section-content">
+                        <div class="btn-group">
+                            <button class="setting-btn"
+                                    ng-class="{'active': menu.emulateAbsoluteMouse === true}"
+                                    ng-click="menu.emulateAbsoluteMouse = true"
+                                    title="{{'CLIENT.HELP_MOUSE_MODE_ABSOLUTE' | translate}}">
+                                {{'CLIENT.NAME_MOUSE_MODE_ABSOLUTE' | translate}}
+                            </button>
+                            <button class="setting-btn"
+                                    ng-class="{'active': menu.emulateAbsoluteMouse === false}"
+                                    ng-click="menu.emulateAbsoluteMouse = false"
+                                    title="{{'CLIENT.HELP_MOUSE_MODE_RELATIVE' | translate}}">
+                                {{'CLIENT.NAME_MOUSE_MODE_RELATIVE' | translate}}
+                            </button>
                         </div>
-
-                        <!-- Touchpad -->
-                        <div class="choice">
-                            <input name="mouse-mode" ng-change="closeMenu()" ng-model="menu.emulateAbsoluteMouse" type="radio" ng-value="false" id="relative">
-                            <div class="figure">
-                                <label for="relative"><img src="images/settings/touchpad.svg" alt="{{'CLIENT.NAME_MOUSE_MODE_RELATIVE' | translate}}"></label>
-                                <p class="caption"><label for="relative">{{'CLIENT.HELP_MOUSE_MODE_RELATIVE' | translate}}</label></p>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
 
-                <!-- Display options -->
-                <div class="menu-section" id="display-settings" ng-if="focusedClient">
-                    <h3>{{'CLIENT.SECTION_HEADER_DISPLAY' | translate}}</h3>
-                    <div class="content">
-                        <div id="zoom-settings">
-                            <guac-client-zoom client="focusedClient"></guac-client-zoom>
+                <!-- Zoom -->
+                <div class="menu-section" id="zoom-settings" ng-if="focusedClient">
+                    <h3 class="section-title">{{'CLIENT.SECTION_HEADER_ZOOM' | translate}}</h3>
+                    <div class="section-content">
+                        <div class="zoom-controls">
+                            <button class="zoom-btn" ng-click="focusedClient.clientProperties.autoFit = false; focusedClient.clientProperties.scale = focusedClient.clientProperties.scale - 0.1" title="{{'CLIENT.TEXT_ZOOM_OUT' | translate}}">−</button>
+                            <span class="zoom-value">{{(focusedClient.clientProperties.scale * 100) | number:0}}%</span>
+                            <button class="zoom-btn" ng-click="focusedClient.clientProperties.autoFit = false; focusedClient.clientProperties.scale = focusedClient.clientProperties.scale + 0.1" title="{{'CLIENT.TEXT_ZOOM_IN' | translate}}">+</button>
+                            <label class="autofit-checkbox">
+                                <input type="checkbox" ng-model="focusedClient.clientProperties.autoFit">
+                                {{'CLIENT.TEXT_ZOOM_AUTO_FIT' | translate}}
+                            </label>
                         </div>
                     </div>
                 </div>

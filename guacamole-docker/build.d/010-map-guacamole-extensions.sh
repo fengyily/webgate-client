@@ -95,25 +95,29 @@ map_extensions() {
 # that already have configuration present to be easily disabled without
 # requiring that all other configuration be removed.
 #
+# 注意：已精简扩展列表，仅保留核心模块
+# 已移除：数据库 (JDBC)、SSO、LDAP、RADIUS、Vault 等大型模块
 map_extensions <<'EOF'
     guacamole-auth-ban..........................BAN_
-    guacamole-auth-duo..........................DUO_
     guacamole-auth-header.......................HTTP_AUTH_
-    guacamole-auth-jdbc/mysql...................MYSQL_
-    guacamole-auth-jdbc/postgresql..............POSTGRESQL_
-    guacamole-auth-jdbc/sqlserver...............SQLSERVER_
     guacamole-auth-json.........................JSON_
-    guacamole-auth-ldap.........................LDAP_
-    guacamole-auth-quickconnect.................QUICKCONNECT_
-    guacamole-auth-radius.......................RADIUS_
-    guacamole-auth-restrict.....................RESTRICT_
-    guacamole-auth-sso/cas......................CAS_
-    guacamole-auth-sso/openid...................OPENID_
-    guacamole-auth-sso/saml.....................SAML_
-    guacamole-auth-sso/ssl......................SSL_AUTH_
-    guacamole-auth-totp.........................TOTP_
-    guacamole-display-statistics................DISPLAY_STATISTICS_
     guacamole-history-recording-storage.........RECORDING_
-    guacamole-vault/ksm.........................KSM_
 EOF
+
+# ===== 以下扩展已注释，如需启用请取消注释 =====
+# map_extensions <<'EOF'
+#     guacamole-auth-duo..........................DUO_
+#     guacamole-auth-ldap.........................LDAP_
+#     guacamole-auth-quickconnect.................QUICKCONNECT_
+#     guacamole-auth-radius.......................RADIUS_
+#     guacamole-auth-restrict.....................RESTRICT_
+#     guacamole-auth-sso/cas......................CAS_
+#     guacamole-auth-sso/openid...................OPENID_
+#     guacamole-auth-sso/saml.....................SAML_
+#     guacamole-auth-sso/ssl......................SSL_AUTH_
+#     guacamole-auth-totp.........................TOTP_
+#     guacamole-display-statistics................DISPLAY_STATISTICS_
+#     guacamole-history-recording-storage.........RECORDING_
+#     guacamole-vault/ksm.........................KSM_
+# EOF
 

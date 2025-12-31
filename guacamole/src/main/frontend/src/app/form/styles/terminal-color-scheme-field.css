@@ -17,139 +17,287 @@
  * under the License.
  */
 
-.terminal-color-scheme-field {
-    max-width: 320px;
-}
+/* ============================================
+ * Compact Theme Picker - Smaller Cards
+ * ============================================ */
 
-.terminal-color-scheme-field select {
+.terminal-color-scheme-field.modern-theme-picker {
+    max-width: 100%;
     width: 100%;
 }
+
+/* Theme cards container - compact grid */
+.theme-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+/* Compact theme card */
+.theme-card {
+    background: #3c3c3c;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    overflow: hidden;
+}
+
+.theme-card:hover {
+    border-color: #0078d4;
+}
+
+.theme-card.selected {
+    border-color: #0078d4;
+    background: #0078d4;
+}
+
+/* Compact theme preview area */
+.theme-preview {
+    height: 32px;
+    padding: 4px 6px;
+    font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+    font-size: 8px;
+    line-height: 1.3;
+    overflow: hidden;
+}
+
+.theme-preview .preview-line {
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.theme-preview .preview-line.success {
+    font-weight: bold;
+}
+
+.theme-preview .preview-cursor {
+    display: none;
+}
+
+/* Compact theme name label */
+.theme-name {
+    padding: 4px 4px;
+    font-size: 10px;
+    font-weight: 500;
+    text-align: center;
+    background: transparent;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.theme-card.selected .theme-name {
+    color: #ffffff;
+}
+
+/* Theme-specific preview styles */
+.theme-preview.theme-black-white {
+    background: #ffffff;
+    color: #000000;
+}
+.theme-preview.theme-black-white .success { color: #008000; }
+
+.theme-preview.theme-gray-black {
+    background: #000000;
+    color: #999999;
+}
+.theme-preview.theme-gray-black .success { color: #3E993E; }
+
+.theme-preview.theme-green-black {
+    background: #000000;
+    color: #00ff00;
+}
+.theme-preview.theme-green-black .success { color: #33ff33; }
+
+.theme-preview.theme-white-black {
+    background: #000000;
+    color: #ffffff;
+}
+.theme-preview.theme-white-black .success { color: #98C379; }
+
+.theme-preview.theme-one-dark {
+    background: #282c34;
+    color: #abb2bf;
+}
+.theme-preview.theme-one-dark .success { color: #98c379; }
+
+.theme-preview.theme-dracula {
+    background: #282a36;
+    color: #f8f8f2;
+}
+.theme-preview.theme-dracula .success { color: #50fa7b; }
+
+.theme-preview.theme-monokai {
+    background: #272822;
+    color: #f8f8f2;
+}
+.theme-preview.theme-monokai .success { color: #a6e22e; }
+
+.theme-preview.theme-solarized-dark {
+    background: #002b36;
+    color: #839496;
+}
+.theme-preview.theme-solarized-dark .success { color: #859900; }
+
+.theme-preview.theme-nord {
+    background: #2e3440;
+    color: #d8dee9;
+}
+.theme-preview.theme-nord .success { color: #a3be8c; }
+
+/* Custom theme card */
+.theme-card.custom-card .theme-preview.custom-preview {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-icon {
+    font-size: 16px;
+}
+
+/* ============================================
+ * Custom Color Scheme Editor
+ * ============================================ */
 
 .terminal-color-scheme-field .custom-color-scheme {
-    background: #EEE;
-    padding: 0.5em;
-    border: 1px solid silver;
-    border-spacing: 0;
-    margin-top: -2px;
-    width: 100%;
+    background: #3c3c3c;
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 8px;
+    border: 1px solid #555;
 }
 
-.terminal-color-scheme-field .custom-color-scheme-section  {
-    display: -ms-flexbox;
-    display: -moz-box;
-    display: -webkit-box;
-    display: -webkit-flex;
+.custom-scheme-header {
+    margin-bottom: 10px;
+}
+
+.custom-scheme-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.color-row {
     display: flex;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.palette-section {
+    margin-top: 10px;
+}
+
+.palette-label {
+    font-size: 11px;
+    color: #b0b0b0;
+    margin-bottom: 6px;
+}
+
+.terminal-color-scheme-field .custom-color-scheme-section {
+    display: flex;
+    flex-wrap: wrap;
 }
 
 .terminal-color-scheme-field .guac-input-color {
-
     display: block;
-    margin: 2px;
-    width: 1.5em;
-    height: 1.5em;
-    min-width: 1.25em;
-    border-radius: 0.15em;
-    line-height: 1.5em;
+    margin: 3px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 6px;
+    line-height: 28px;
     text-align: center;
-    font-size: 0.75em;
+    font-size: 10px;
     cursor: pointer;
-    color: black;
+    color: rgba(255, 255, 255, 0.7);
+    border: 2px solid transparent;
+    transition: all 0.15s ease;
+    flex: 0 0 auto;
+}
 
-    -ms-flex: 1;
-    -moz-box-flex: 1;
-    -webkit-box-flex: 1;
-    -webkit-flex: 1;
-    flex: 1;
-
+.terminal-color-scheme-field .guac-input-color:hover {
+    transform: scale(1.1);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .terminal-color-scheme-field .guac-input-color.read-only {
     cursor: not-allowed;
+    opacity: 0.5;
 }
 
 .terminal-color-scheme-field .guac-input-color.dark {
-    color: white;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .terminal-color-scheme-field .palette .guac-input-color {
-    font-weight: bold;
+    font-weight: 600;
 }
 
-/* Hide palette numbers unless color scheme details are visible */
+/* Hide palette numbers unless details visible */
 .terminal-color-scheme-field.custom-color-scheme-details-hidden .custom-color-scheme .palette .guac-input-color {
     color: transparent;
 }
 
-/*
- * Custom color scheme details header
- */
+/* ============================================
+ * Details Toggle
+ * ============================================ */
 
 .terminal-color-scheme-field .custom-color-scheme-details-header {
-    font-size: 0.8em;
-    margin: 0.5em 0;
+    margin-top: 16px;
     padding: 0;
 }
 
 .terminal-color-scheme-field .custom-color-scheme-details-header::before {
-    content: '▸ ';
+    content: none;
 }
 
-.terminal-color-scheme-field.custom-color-scheme-details-visible .custom-color-scheme-details-header::before {
-    content: '▾ ';
-}
-
-/*
- * Details show/hide link
- */
-
-/* Render show/hide as a link */
-.terminal-color-scheme-field .custom-color-scheme-hide-details,
-.terminal-color-scheme-field .custom-color-scheme-show-details {
-    color: blue;
-    text-decoration: underline;
+.details-toggle {
+    color: #61AFEF;
+    text-decoration: none;
     cursor: pointer;
-    margin: 0 0.25em;
-    font-weight: normal;
+    font-size: 12px;
+    display: inline-block;
+    padding: 6px 12px;
+    background: rgba(97, 175, 239, 0.1);
+    border-radius: 4px;
+    transition: all 0.15s ease;
 }
 
-.terminal-color-scheme-field .custom-color-scheme-hide-details {
-    display: none;
+.details-toggle:hover {
+    background: rgba(97, 175, 239, 0.2);
 }
 
-.terminal-color-scheme-field.custom-color-scheme-details-visible .custom-color-scheme-hide-details {
-    display: inline;
-}
-
-.terminal-color-scheme-field.custom-color-scheme-details-visible .custom-color-scheme-show-details {
-    display: none;
-}
-
-/*
- * Color scheme details
- */
+/* ============================================
+ * Color Scheme Details Textarea
+ * ============================================ */
 
 .terminal-color-scheme-field .custom-color-scheme-details {
-    display: none;
-}
-
-.terminal-color-scheme-field.custom-color-scheme-details-visible .custom-color-scheme-details {
-    display: block;
     width: 100%;
-    margin: 0.5em 0;
+    margin-top: 12px;
+    padding: 12px;
+    background: #0d1117;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: #c9d1d9;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 12px;
+    min-height: 120px;
+    resize: vertical;
 }
 
-/*
- * Color picker
- */
+/* ============================================
+ * Color Picker Overrides
+ * ============================================ */
 
-/* Increase width of color picker to allow two even rows of eight color
- * swatches */
 .guac-input-color-picker[data-theme="monolith"] {
     width: 16.25em;
 }
 
-/* Remove Guacamole-specific styles inherited from the generic button rules */
 .guac-input-color-picker[data-theme="monolith"] button {
     min-width: 0;
     padding: 0;

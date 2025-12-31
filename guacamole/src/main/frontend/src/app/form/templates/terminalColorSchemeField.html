@@ -1,65 +1,27 @@
-<div class="terminal-color-scheme-field" ng-class="{
+<div class="terminal-color-scheme-field modern-theme-picker" ng-class="{
         'custom-color-scheme-details-visible' : detailsShown,
         'custom-color-scheme-details-hidden' : !detailsShown
     }">
 
-    <!-- Pre-defined color scheme options -->
-    <select ng-attr-id="{{ fieldId }}"
-            ng-attr-name="{{ field.name }}"
-            ng-model="selectedColorScheme">
-        <option ng-repeat="option in field.options | orderBy: value"
-                ng-value="option">{{ getFieldOption(option) | translate }}</option>
-        <option value="custom">{{ 'COLOR_SCHEME.FIELD_OPTION_CUSTOM' | translate }}</option>
-    </select>
+    <!-- Hidden input for form compatibility -->
+    <input type="hidden" ng-attr-id="{{ fieldId }}" ng-attr-name="{{ field.name }}" ng-model="selectedColorScheme">
 
-    <!-- Custom color scheme -->
-    <div class="custom-color-scheme" ng-show="isCustom()">
-
-        <!-- Default foreground color -->
-        <div class="custom-color-scheme-section default-color foreground">
-            <guac-input-color model="customColorScheme.foreground"
-                              palette="defaultPalette">
-                {{ 'COLOR_SCHEME.FIELD_HEADER_FOREGROUND' | translate }}
-            </guac-input-color>
+    <!-- Modern card-based theme selector -->
+    <div class="theme-cards-container">
+        <!-- Pre-defined color scheme cards -->
+        <div class="theme-card" 
+             ng-repeat="option in field.options" 
+             ng-if="option"
+             ng-click="selectColorScheme(option)"
+             ng-class="{'selected': selectedColorScheme === option}">
+            <div class="theme-preview" ng-class="'theme-' + option">
+                <div class="preview-line">$ ssh user@server</div>
+                <div class="preview-line success">Connected!</div>
+                <div class="preview-cursor">_</div>
+            </div>
+            <div class="theme-name">{{ getFieldOption(option) | translate }}</div>
         </div>
-
-        <!-- Default background color -->
-        <div class="custom-color-scheme-section default-color background">
-            <guac-input-color model="customColorScheme.background"
-                              palette="defaultPalette">
-                {{ 'COLOR_SCHEME.FIELD_HEADER_BACKGROUND' | translate }}
-            </guac-input-color>
-        </div>
-
-        <!-- Low intensity portion of 16-color palette -->
-        <div class="custom-color-scheme-section palette low-intensity">
-            <guac-input-color ng-repeat="index in lowIntensity"
-                              model="customColorScheme.colors[index]"
-                              palette="defaultPalette">
-                {{ index }}
-            </guac-input-color>
-        </div>
-
-        <!-- High intensity portion of 16-color palette -->
-        <div class="custom-color-scheme-section palette high-intensity">
-            <guac-input-color ng-repeat="index in highIntensity"
-                              model="customColorScheme.colors[index]"
-                              palette="defaultPalette">
-                {{ index }}
-            </guac-input-color>
-        </div>
-
+        
     </div>
-
-    <!-- Show/hide details -->
-    <h4 class="custom-color-scheme-details-header" ng-show="isCustom()">
-        {{'COLOR_SCHEME.SECTION_HEADER_DETAILS' | translate}}
-        <a class="custom-color-scheme-show-details" ng-click="showDetails()">{{'COLOR_SCHEME.ACTION_SHOW_DETAILS' | translate}}</a>
-        <a class="custom-color-scheme-hide-details" ng-click="hideDetails()">{{'COLOR_SCHEME.ACTION_HIDE_DETAILS' | translate}}</a>
-    </h4>
-
-    <!-- Custom color scheme details (internal representation -->
-    <textarea class="custom-color-scheme-details" spellcheck="false"
-              ng-model="model" ng-show="isCustom()"></textarea>
 
 </div>

@@ -30,31 +30,45 @@ ARG TOMCAT_JRE=jdk21
 # Use official maven image for the build
 FROM maven:3-eclipse-temurin-21 AS builder
 
+# 注意：由于已跳过测试，以下 Firefox 相关配置已禁用以加速构建
 # Use Mozilla's Firefox PPA (newer Ubuntu lacks a "firefox-esr" package and
 # provides only a transitional "firefox" package that actually requires Snap
 # and thus can't be used within Docker)
-RUN    apt-get update                                \
-    && apt-get upgrade -y                            \
-    && apt-get install -y software-properties-common \
-    && add-apt-repository -y ppa:mozillateam/ppa
+# RUN    apt-get update                                \
+#     && apt-get upgrade -y                            \
+#     && apt-get install -y software-properties-common \
+#     && add-apt-repository -y ppa:mozillateam/ppa
 
 # Explicitly prefer packages from the Firefox PPA
-COPY guacamole-docker/mozilla-firefox.pref /etc/apt/preferences.d/
+# COPY guacamole-docker/mozilla-firefox.pref /etc/apt/preferences.d/
 
 # Install firefox browser for sake of JavaScript unit tests
-RUN apt-get update 
+# RUN apt-get update 
 # && apt-get install -y firefox
 
 # Arbitrary arguments that can be passed to the maven build. By default, an
 # argument will be provided to explicitly unskip any skipped tests. To, for
 # example, allow the building of the RADIUS auth extension, pass a build profile
 # as well: `--build-arg MAVEN_ARGUMENTS="-P lgpl-extensions -DskipTests=false"`.
-ARG MAVEN_ARGUMENTS="-DskipTests=true"
+# 
+# 优化：排除不需要的大型扩展模块，使用多线程构建加速
+# 保留：ban(安全)、header(插件认证)、json(插件认证)
+ARG MAVEN_ARGUMENTS="-DskipTests=true -T 1C \
+    -pl !extensions/guacamole-auth-jdbc \
+    -pl !extensions/guacamole-auth-sso \
+    -pl !extensions/guacamole-auth-ldap \
+    -pl !extensions/guacamole-auth-radius \
+    -pl !extensions/guacamole-auth-duo \
+    -pl !extensions/guacamole-auth-totp \
+    -pl !extensions/guacamole-auth-restrict \
+    -pl !extensions/guacamole-auth-quickconnect \
+    -pl !extensions/guacamole-vault \
+    -pl !extensions/guacamole-display-statistics"
 
-# Versions of JDBC drivers to bundle within image
-ARG MSSQL_JDBC_VERSION=9.4.1
-ARG MYSQL_JDBC_VERSION=9.3.0
-ARG PGSQL_JDBC_VERSION=42.7.7
+# Versions of JDBC drivers to bundle within image (已禁用，不需要数据库)
+# ARG MSSQL_JDBC_VERSION=9.4.1
+# ARG MYSQL_JDBC_VERSION=9.3.0
+# ARG PGSQL_JDBC_VERSION=42.7.7
 
 # Build environment variables
 ENV \

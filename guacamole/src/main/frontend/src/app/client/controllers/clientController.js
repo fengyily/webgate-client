@@ -510,6 +510,42 @@ angular.module('client').controller('clientController', ['$scope', '$routeParams
 
     });
 
+    // Keep track of previous parameter values for change detection
+    var previousConnectionParameters = {};
+
+    // Watch connection parameters and apply changes immediately
+    $scope.$watch('menu.connectionParameters', function connectionParametersChanged(newParams, oldParams) {
+        
+        // Skip if menu is not shown or no focused client
+        if (!$scope.menu.shown || !$scope.focusedClient)
+            return;
+
+        // Find which parameters have changed and apply them immediately
+        angular.forEach(newParams, function(value, name) {
+            if (previousConnectionParameters[name] !== value && value !== undefined) {
+                // Try using the existing argument mechanism first
+                var managedArgument = $scope.focusedClient.arguments[name];
+                if (managedArgument) {
+                    ManagedClient.setArgument($scope.focusedClient, name, value);
+                } else {
+                    // If no managed argument exists, send directly via argv stream
+                    var params = {};
+                    params[name] = value;
+                    ManagedClient.sendArguments($scope.focusedClient, params);
+                }
+                previousConnectionParameters[name] = value;
+            }
+        });
+
+    }, true);
+
+    // Reset previous parameters when menu is shown
+    $scope.$watch('menu.shown', function menuShownForParameters(shown) {
+        if (shown && $scope.focusedClient) {
+            previousConnectionParameters = angular.copy($scope.menu.connectionParameters);
+        }
+    });
+
     // Update page icon when thumbnail changes
     $scope.$watch('focusedClient.thumbnail.canvas', function thumbnailChanged(canvas) {
         iconService.setIcons(canvas);
@@ -719,6 +755,14 @@ angular.module('client').controller('clientController', ['$scope', '$routeParams
             guacFullscreen.toggleFullscreenMode();
             $scope.menu.shown = false;
         }
+    };
+
+    /**
+     * Toggles fullscreen mode and closes the menu.
+     */
+    $scope.toggleFullscreen = function toggleFullscreen() {
+        guacFullscreen.toggleFullscreenMode();
+        $scope.menu.shown = false;
     };
 
     // Set client-specific menu actions

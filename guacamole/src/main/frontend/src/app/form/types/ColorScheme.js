@@ -48,41 +48,41 @@ angular.module('form').factory('ColorScheme', [function defineColorScheme() {
 
         /**
          * The terminal foreground color. This will be the default foreground
-         * color of the Guacamole terminal emulator ("#999999") by default.
+         * color of the Guacamole terminal emulator ("#D4D4D4") by default.
          *
          * @type {String}
          */
-        this.foreground = template.foreground || '#999999';
+        this.foreground = template.foreground || '#D4D4D4';
 
         /**
          * The terminal color palette. Default values are provided for the
-         * normal 16 terminal colors using the default values of the Guacamole
-         * terminal emulator, however the terminal emulator and this
+         * normal 16 terminal colors using a modern, bright color scheme
+         * inspired by One Dark theme, however the terminal emulator and this
          * representation support up to 256 colors.
          *
          * @type {String[]}
          */
         this.colors = template.colors || [
 
-            // Normal colors
-            '#000000', // Black
-            '#993E3E', // Red
-            '#3E993E', // Green
-            '#99993E', // Brown
-            '#3E3E99', // Blue
-            '#993E99', // Magenta
-            '#3E9999', // Cyan
-            '#999999', // White
+            // Normal colors (brighter, modern palette)
+            '#1E1E1E', // Black (slightly lighter than pure black)
+            '#E06C75', // Red (bright coral red)
+            '#98C379', // Green (bright green)
+            '#E5C07B', // Yellow/Brown (warm yellow)
+            '#61AFEF', // Blue (bright sky blue)
+            '#C678DD', // Magenta (bright purple)
+            '#56B6C2', // Cyan (bright teal)
+            '#ABB2BF', // White (light gray)
 
-            // Intense colors
-            '#3E3E3E', // Black
-            '#FF6767', // Red
-            '#67FF67', // Green
-            '#FFFF67', // Brown
-            '#6767FF', // Blue
-            '#FF67FF', // Magenta
-            '#67FFFF', // Cyan
-            '#FFFFFF'  // White
+            // Intense/Bright colors
+            '#5C6370', // Bright Black (medium gray)
+            '#F44747', // Bright Red
+            '#B5E890', // Bright Green
+            '#FFD580', // Bright Yellow
+            '#8CC8FF', // Bright Blue
+            '#D8A0DF', // Bright Magenta
+            '#7FD6E4', // Bright Cyan
+            '#FFFFFF'  // Bright White
 
         ];
 

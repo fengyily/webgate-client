@@ -97,6 +97,17 @@ angular.module('form').controller('terminalColorSchemeFieldController', ['$scope
     };
 
     /**
+     * Selects the given color scheme. This function is used to avoid
+     * scope inheritance issues with ng-repeat.
+     *
+     * @param {String} scheme
+     *     The color scheme to select, or 'custom' for a custom scheme.
+     */
+    $scope.selectColorScheme = function selectColorScheme(scheme) {
+        $scope.selectedColorScheme = scheme;
+    };
+
+    /**
      * Shows the raw details of the custom color scheme. If the details are
      * already shown, this function has no effect.
      */

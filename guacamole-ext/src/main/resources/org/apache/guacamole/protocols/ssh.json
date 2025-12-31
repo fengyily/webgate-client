@@ -56,16 +56,17 @@
                 {
                     "name"  : "color-scheme",
                     "type"  : "TERMINAL_COLOR_SCHEME",
-                    "options" : [ "", "black-white", "gray-black", "green-black", "white-black" ]
+                    "options" : [ "black-white", "gray-black", "green-black", "white-black", "one-dark", "dracula", "monokai", "solarized-dark", "nord" ]
                 },
                 {
                     "name"  : "font-name",
-                    "type"  : "TEXT"
+                    "type"  : "ENUM",
+                    "options" : [ "monospace", "Consolas", "Monaco", "Menlo", "Ubuntu Mono", "Source Code Pro", "Fira Code", "JetBrains Mono", "Courier New" ]
                 },
                 {
                     "name"  : "font-size",
                     "type"  : "ENUM",
-                    "options" : [ "", "8", "9", "10", "11", "12", "14", "18", "24", "30", "36", "48", "60", "72", "96" ]
+                    "options" : [ "12", "10", "14", "18", "24" ]
                 },
                 {
                     "name"  : "scrollback",

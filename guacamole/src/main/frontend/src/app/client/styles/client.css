@@ -116,8 +116,374 @@ body.client {
 
 }
 
+/* Modern client menu header styles */
+.client .menu .header {
+    background: #252526;
+    border-bottom: 1px solid #3c3c3c;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 .client .menu .header h2 {
     text-transform: none;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    flex: 1;
+    margin: 0;
+    padding: 0;
+}
+
+/* Header action buttons */
+.client .menu .header .header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.client .menu .header .action-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    padding: 6px;
+}
+
+.client .menu .header .action-btn .action-icon {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0) invert(1);
+}
+
+.client .menu .header .fullscreen-btn {
+    background: #0078d4;
+}
+
+.client .menu .header .fullscreen-btn:hover {
+    background: #1a86d9;
+    transform: scale(1.05);
+}
+
+.client .menu .header .disconnect-btn {
+    background: #d13438;
+}
+
+.client .menu .header .disconnect-btn:hover {
+    background: #e63e42;
+    transform: scale(1.05);
+}
+
+/* SFTP item styling */
+.sftp-item {
+    padding: 8px 12px;
+    background: #3c3c3c;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 6px;
+    color: #ffffff;
+    font-size: 13px;
+    transition: background 0.15s ease;
+}
+
+.sftp-item:hover {
+    background: #4c4c4c;
+}
+
+.sftp-icon {
+    margin-right: 8px;
+}
+
+/* =============================================
+ * Form fields styling in client menu
+ * Unified section title style for all first-level items
+ * ============================================= */
+
+/* Hide the form-group header (DISPLAY group header) */
+.client .menu .connection-parameters .form-group .form-header {
+    display: none;
+}
+
+/* Each labeled-field represents a first-level section */
+.client .menu .labeled-field {
+    display: block !important;
+    margin-bottom: 16px;
+}
+
+/* Field labels styled as unified section titles (same as .section-title) */
+.client .menu .labeled-field .field-header {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.client .menu .labeled-field .field-header label {
+    color: #9d9d9d !important;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    display: block;
+    margin: 0;
+    padding: 0;
+}
+
+.client .menu .labeled-field .form-field {
+    display: block;
+    width: 100%;
+}
+
+/* All text inputs and selects in menu */
+.client .menu input[type="text"],
+.client .menu input[type="number"],
+.client .menu select,
+.client .menu textarea {
+    background: #3c3c3c !important;
+    border: 1px solid #555 !important;
+    color: #ffffff !important;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.client .menu select option {
+    background: #3c3c3c;
+    color: #ffffff;
+}
+
+.client .menu input:focus,
+.client .menu select:focus,
+.client .menu textarea:focus {
+    border-color: #0078d4 !important;
+    outline: none;
+}
+
+/* =============================================
+ * Font Size field - Hide from guac-form (use custom section)
+ * ============================================= */
+
+/* Hide the original font-size field from guac-form */
+.client .menu .connection-parameters .labeled-field-font-size {
+    display: none !important;
+}
+
+/* Style select dropdowns nicely */
+.client .menu .connection-parameters .select-field select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: #3c3c3c;
+    color: #ffffff;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 8px 30px 8px 12px;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+}
+
+/* =============================================
+ * SFTP / Devices styling in dark menu
+ * ============================================= */
+
+.client #guac-menu #devices .device {
+    padding: 10px 12px 10px 40px;
+    background: #3c3c3c;
+    border: 1px solid #555;
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 13px;
+    margin-bottom: 8px;
+    transition: all 0.15s ease;
+}
+
+.client #guac-menu #devices .device:hover {
+    background: #4a4a4a;
+    border-color: #0078d4;
+    cursor: pointer;
+}
+
+.client #guac-menu #devices .device.filesystem {
+    background-image: url('images/drive.svg');
+    background-size: 20px 20px;
+    background-repeat: no-repeat;
+    background-position: 10px center;
+    /* Ensure SVG is visible on dark background */
+    filter: brightness(1.5);
+}
+
+/* Share links styling */
+.client #guac-menu #share-links {
+    padding: 12px;
+    background: #3c3c3c;
+    border: 1px solid #555;
+    border-radius: 6px;
+    color: #ffffff;
+}
+
+.client #guac-menu #share-links h3 {
+    color: #ffffff;
+}
+
+.client #guac-menu #share-links th,
+.client #guac-menu #share-links td {
+    color: #d4d4d4;
+}
+
+/* =============================================
+ * Filesystem menu dark theme
+ * ============================================= */
+
+.client #filesystem-menu {
+    background: #2d2d30;
+}
+
+/* Merge header with breadcrumbs for cleaner look */
+.client #filesystem-menu .header:not(.breadcrumbs) {
+    background: #1e1e1e;
+    border-bottom: none;
+    padding: 8px 12px;
+    gap: 8px;
+}
+
+.client #filesystem-menu .header h2 {
+    color: #ffffff;
+    font-size: 14px;
+}
+
+.client #filesystem-menu .header.breadcrumbs {
+    background: #252526;
+    border-bottom: 1px solid #3c3c3c;
+    padding: 0;
+    min-height: 32px;
+}
+
+.client #filesystem-menu .header.breadcrumbs .breadcrumb {
+    color: #d4d4d4;
+}
+
+.client #filesystem-menu .header.breadcrumbs .breadcrumb:hover {
+    background-color: #0078d4;
+    color: #ffffff;
+}
+
+.client #filesystem-menu .header.breadcrumbs .breadcrumb.root {
+    filter: brightness(1.5);
+}
+
+.client #filesystem-menu .menu-body {
+    background: #2d2d30;
+}
+
+/* File browser - complete dark theme */
+.client #filesystem-menu .file-browser {
+    background: #1e1e1e;
+}
+
+.client #filesystem-menu .file-browser .list-item {
+    color: #e0e0e0;
+    padding: 8px 12px;
+    border-bottom: 1px solid #333;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background 0.15s ease;
+}
+
+.client #filesystem-menu .file-browser .list-item:hover {
+    background: #2a2d2e;
+}
+
+.client #filesystem-menu .file-browser .list-item .caption {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #e0e0e0;
+}
+
+.client #filesystem-menu .file-browser .list-item .caption .icon {
+    width: 20px;
+    height: 20px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    flex-shrink: 0;
+    filter: brightness(1.3) saturate(1.2);
+}
+
+.client #filesystem-menu .file-browser .list-item.focused .caption {
+    background: rgba(0, 120, 212, 0.3);
+    border-color: #0078d4;
+}
+
+/* Directory styling */
+.client #filesystem-menu .file-browser .directory > .caption {
+    color: #61AFEF;
+    font-weight: 500;
+}
+
+.client #filesystem-menu .file-browser .directory > .caption .icon {
+    filter: brightness(1.5) saturate(1.3);
+}
+
+/* Normal file styling */
+.client #filesystem-menu .file-browser .normal-file > .caption {
+    color: #d4d4d4;
+}
+
+/* Previous directory (parent) */
+.client #filesystem-menu .file-browser .directory.previous > .caption {
+    color: #98C379;
+}
+
+/* Upload button styling */
+.client #filesystem-menu .header button.upload {
+    background: #0078d4;
+    color: #ffffff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.15s ease;
+}
+
+.client #filesystem-menu .header button.upload:hover {
+    background: #1a86d9;
+}
+
+.client #filesystem-menu .header button.back {
+    background: #3c3c3c;
+    color: #ffffff;
+    border: 1px solid #555;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.15s ease;
+}
+
+.client #filesystem-menu .header button.back:hover {
+    background: #4a4a4a;
+    border-color: #666;
+}
+
+/* Menu overlay for closing menu on outside click */
+.menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+    cursor: pointer;
 }
 
 .client .user-menu .menu-contents li a.disconnect {

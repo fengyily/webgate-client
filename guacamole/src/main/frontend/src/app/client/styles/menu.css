@@ -18,20 +18,20 @@
  */
 
 .menu {
-    overflow: hidden;
+    overflow: visible;
     position: absolute;
     top: 0;
     height: 100%;
     max-width: 100%;
-    width: 480px;
-    background: #EEE;
-    box-shadow: inset -1px 0 2px white, 1px 0 2px black;
+    width: 380px;
+    background: #2d2d30;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
     z-index: 100;
-    -webkit-transition: left 0.125s, opacity 0.125s;
-    -moz-transition: left 0.125s, opacity 0.125s;
-    -ms-transition: left 0.125s, opacity 0.125s;
-    -o-transition: left 0.125s, opacity 0.125s;
-    transition: left 0.125s, opacity 0.125s;
+    -webkit-transition: left 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    -moz-transition: left 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    -ms-transition: left 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    -o-transition: left 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: left 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .menu-content {
@@ -63,6 +63,8 @@
     
     width: 100%;
     height: 100%;
+    overflow: hidden;
+    background: #2d2d30;
 
 }
 
@@ -124,23 +126,306 @@
     flex: 0 0 auto;
 }
 
-.menu-section h3 {
+/* =============================================
+ * Unified Section Titles - All first-level items
+ * ============================================= */
+
+.menu-section {
+    margin-bottom: 16px;
+}
+
+.menu-section .section-title,
+.menu-section h3.section-title {
     margin: 0;
     padding: 0;
-    padding-bottom: 1em;
+    padding-bottom: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #9d9d9d;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border: none;
 }
 
-.menu-section ~ .menu-section h3 {
-    padding-top: 1em;
+.menu-section .section-content {
+    color: #ffffff;
 }
 
+.menu-section .description {
+    color: #b0b0b0;
+    font-size: 12px;
+    margin-bottom: 0.8em;
+}
+
+.menu-section .choice {
+    margin-bottom: 10px;
+}
+
+.menu-section .choice label {
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.menu-section .choice .caption {
+    color: #a0a0a0;
+    font-size: 11px;
+    margin-top: 3px;
+}
+
+/* Button group styling for all sections */
+.menu-section .btn-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.menu-section .setting-btn {
+    flex: 0 0 auto;
+    min-width: 50px;
+    padding: 6px 12px;
+    border: 1px solid #555;
+    background: #3c3c3c;
+    color: #b0b0b0;
+    font-size: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.menu-section .setting-btn:hover {
+    background: #4a4a4a;
+    color: #ffffff;
+    border-color: #666;
+}
+
+.menu-section .setting-btn.active {
+    background: #0078d4;
+    color: #ffffff;
+    border-color: #0078d4;
+}
+
+/* Zoom controls */
+.menu-section .zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.menu-section .zoom-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #555;
+    background: #3c3c3c;
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.menu-section .zoom-btn:hover {
+    background: #0078d4;
+    border-color: #0078d4;
+}
+
+.menu-section .zoom-value {
+    font-size: 14px;
+    color: #ffffff;
+    min-width: 50px;
+    text-align: center;
+}
+
+.menu-section .autofit-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #b0b0b0;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.menu-section .autofit-checkbox input {
+    accent-color: #0078d4;
+    width: 14px;
+    height: 14px;
+}
+
+.menu-section .autofit-checkbox:hover {
+    color: #ffffff;
+}
+
+/* SFTP item styling */
+.menu-section .sftp-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #3c3c3c;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #d4d4d4;
+    font-size: 13px;
+    transition: all 0.15s ease;
+}
+
+.menu-section .sftp-item:hover {
+    background: #4a4a4a;
+    color: #ffffff;
+}
+
+.menu-section .sftp-icon {
+    font-size: 16px;
+}
+
+/* Form fields in menu */
+.menu-section select,
+.menu-section input[type="text"] {
+    background: #3c3c3c;
+    border: 1px solid #555;
+    color: #ffffff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.menu-section select:focus,
+.menu-section input[type="text"]:focus {
+    border-color: #0078d4;
+    outline: none;
+}
+
+.menu-section select option {
+    background: #3c3c3c;
+    color: #ffffff;
+}
+
+/* Radio and checkbox styling */
+.menu-section input[type="radio"],
+.menu-section input[type="checkbox"] {
+    accent-color: #0078d4;
+}
+
+/* Menu toggle handle - slim transparent trigger on right edge */
+.menu-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: -6px;
+    width: 6px;
+    background: transparent;
+    border-radius: 0 3px 3px 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 101;
+    transition: all 0.2s ease;
+}
+
+/* Visible indicator line */
+.menu-handle::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
+    transition: all 0.2s ease;
+}
+
+.menu-handle:hover {
+    width: 24px;
+    right: -24px;
+    background: linear-gradient(to right, rgba(45, 45, 48, 0.95), rgba(35, 35, 38, 0.9));
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+}
+
+.menu-handle:hover::before {
+    opacity: 0;
+}
+
+.menu-handle::after {
+    content: '';
+    opacity: 0;
+    font-size: 16px;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.7);
+    transition: opacity 0.2s ease;
+}
+
+.menu-handle:hover::after {
+    content: '›';
+    opacity: 1;
+}
+
+.menu.open .menu-handle {
+    right: -20px;
+    width: 20px;
+    background: linear-gradient(to right, rgba(45, 45, 48, 0.95), rgba(35, 35, 38, 0.9));
+}
+
+.menu.open .menu-handle::before {
+    opacity: 0;
+}
+
+.menu.open .menu-handle::after {
+    content: '‹';
+    opacity: 1;
+}
+
+.menu.open .menu-handle:hover {
+    width: 24px;
+    right: -24px;
+}
+
+/* =============================================
+ * Connection Parameters (guac-form) Styling
+ * Make Color Scheme, Font Name use same title style
+ * ============================================= */
+
+.connection-parameters .labeled-field {
+    margin-bottom: 16px;
+}
+
+.connection-parameters .labeled-field .field-header {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.connection-parameters .labeled-field .field-header label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #9d9d9d;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+/* Hide default form group header */
+.connection-parameters .form-group .form-header {
+    display: none;
+}
+
+/* Hide font-size field from guac-form (we use custom buttons) */
+.connection-parameters .labeled-field[field-name="font-size"] {
+    display: none;
+}
+
+/* Menu positioning - closed state completely hidden, only handle visible */
 .menu,
 .menu.closed {
-    left: -480px;
-    opacity: 0;
+    left: -380px;
 }
 
 .menu.open {
     left: 0px;
-    opacity: 1;
 }
