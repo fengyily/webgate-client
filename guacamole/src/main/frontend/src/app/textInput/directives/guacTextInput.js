@@ -217,7 +217,9 @@ angular.module('textInput').directive('guacTextInput', [function guacTextInput()
 
             /**
              * Translates each character within the given string to keysyms and
-             * sends each, in order, as if typed by the user.
+             * sends each, in order, as if typed by the user. For multi-line
+             * text (paste operations), bracketed paste mode escape sequences
+             * are sent to prevent terminal auto-indent and comment continuation.
              * 
              * @param {String} content
              *     The string to send.
@@ -226,13 +228,40 @@ angular.module('textInput').directive('guacTextInput', [function guacTextInput()
 
                 var sentText = "";
 
-                // Send each codepoint within the string
+                // Filter out padding characters and build the actual text to send
                 for (var i=0; i<content.length; i++) {
                     var codepoint = content.charCodeAt(i);
                     if (codepoint !== TEXT_INPUT_PADDING_CODEPOINT) {
                         sentText += String.fromCharCode(codepoint);
-                        sendCodepoint(codepoint);
                     }
+                }
+
+                // Check if the string contains newlines (indicating a paste operation)
+                var isMultiLine = sentText.indexOf('\n') !== -1 || sentText.indexOf('\r') !== -1;
+
+                if (isMultiLine) {
+                    // Send bracketed paste start sequence: ESC[200~
+                    sendKeysym(0xFF1B); // ESC (using keysym for Escape key)
+                    sendCodepoint(0x5B); // [
+                    sendCodepoint(0x32); // 2
+                    sendCodepoint(0x30); // 0
+                    sendCodepoint(0x30); // 0
+                    sendCodepoint(0x7E); // ~
+                }
+
+                // Send each character
+                for (var j=0; j<sentText.length; j++) {
+                    sendCodepoint(sentText.charCodeAt(j));
+                }
+
+                if (isMultiLine) {
+                    // Send bracketed paste end sequence: ESC[201~
+                    sendKeysym(0xFF1B); // ESC
+                    sendCodepoint(0x5B); // [
+                    sendCodepoint(0x32); // 2
+                    sendCodepoint(0x30); // 0
+                    sendCodepoint(0x31); // 1
+                    sendCodepoint(0x7E); // ~
                 }
 
                 // Display the text that was sent

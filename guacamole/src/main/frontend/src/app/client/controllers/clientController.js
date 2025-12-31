@@ -140,6 +140,138 @@ angular.module('client').controller('clientController', ['$scope', '$routeParams
 
     };
 
+    /**
+     * Context menu (right-click menu) properties.
+     */
+    $scope.contextMenu = {
+
+        /**
+         * Whether the context menu is currently visible.
+         *
+         * @type Boolean
+         */
+        visible: false,
+
+        /**
+         * X position of the context menu.
+         *
+         * @type Number
+         */
+        x: 0,
+
+        /**
+         * Y position of the context menu.
+         *
+         * @type Number
+         */
+        y: 0
+
+    };
+
+    /**
+     * Shows the context menu at the specified position.
+     *
+     * @param {Number} x
+     *     The X coordinate for the menu.
+     *
+     * @param {Number} y
+     *     The Y coordinate for the menu.
+     */
+    $scope.showContextMenu = function showContextMenu(x, y) {
+        $scope.contextMenu.x = x;
+        $scope.contextMenu.y = y;
+        $scope.contextMenu.visible = true;
+    };
+
+    /**
+     * Hides the context menu.
+     */
+    $scope.hideContextMenu = function hideContextMenu() {
+        $scope.contextMenu.visible = false;
+    };
+
+    /**
+     * Handles the copy action from the context menu.
+     * Copies selected text from remote to local clipboard.
+     */
+    $scope.contextMenuCopy = function contextMenuCopy() {
+        $scope.hideContextMenu();
+        // The clipboard is already synced via guacClipboard events
+        // Just show a brief notification or do nothing
+    };
+
+    /**
+     * Handles the paste action from the context menu.
+     * Pastes content from local clipboard to remote.
+     */
+    $scope.contextMenuPaste = function contextMenuPaste() {
+        $scope.hideContextMenu();
+        
+        // Read from local clipboard and send to remote
+        if (navigator.clipboard && navigator.clipboard.readText) {
+            navigator.clipboard.readText().then(function(text) {
+                if (text && $scope.focusedClient) {
+                    // Use the keyboard's type function with bracketed paste
+                    var keyboard = $injector.get('$document')[0]._guacKeyboard;
+                    if (keyboard && keyboard.type) {
+                        keyboard.type(text);
+                    }
+                }
+            }).catch(function(err) {
+                console.warn('Failed to read clipboard:', err);
+            });
+        }
+    };
+
+    /**
+     * Handles the clear screen action from the context menu.
+     * Sends Ctrl+L to clear the terminal screen.
+     */
+    $scope.contextMenuClearScreen = function contextMenuClearScreen() {
+        $scope.hideContextMenu();
+        
+        if ($scope.focusedClient && $scope.focusedClient.client) {
+            var client = $scope.focusedClient.client;
+            // Send Ctrl+L (clear screen)
+            client.sendKeyEvent(1, 0xFFE3); // Ctrl down
+            client.sendKeyEvent(1, 0x006C); // 'l' down
+            client.sendKeyEvent(0, 0x006C); // 'l' up
+            client.sendKeyEvent(0, 0xFFE3); // Ctrl up
+        }
+    };
+
+    // Handle right-click to show context menu
+    document.addEventListener('contextmenu', function(e) {
+        // Only show context menu when client is focused
+        if ($scope.focusedClient && $scope.focusedClient.clientProperties.focused) {
+            e.preventDefault();
+            $scope.$apply(function() {
+                $scope.showContextMenu(e.clientX, e.clientY);
+            });
+        }
+    });
+
+    // Hide context menu when clicking elsewhere
+    document.addEventListener('click', function(e) {
+        if ($scope.contextMenu.visible) {
+            var contextMenuElement = document.getElementById('guac-context-menu');
+            if (contextMenuElement && !contextMenuElement.contains(e.target)) {
+                $scope.$apply(function() {
+                    $scope.hideContextMenu();
+                });
+            }
+        }
+    });
+
+    // Hide context menu when pressing Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && $scope.contextMenu.visible) {
+            $scope.$apply(function() {
+                $scope.hideContextMenu();
+            });
+        }
+    });
+
     // Convenience method for closing the menu
     $scope.closeMenu = function closeMenu() {
         $scope.menu.shown = false;

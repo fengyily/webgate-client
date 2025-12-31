@@ -605,6 +605,44 @@ Guacamole.Keyboard = function Keyboard(element) {
      * @type {!Guacamole.Keyboard.ModifierState}
      */
     this.modifiers = new Guacamole.Keyboard.ModifierState();
+
+    /**
+     * Whether a paste operation is pending. This is set to true when
+     * Ctrl+V/Cmd+V is detected.
+     *
+     * @private
+     * @type {!boolean}
+     */
+    var pendingPaste = false;
+
+    /**
+     * Whether a paste operation was just handled. This is used to prevent
+     * the input event handler from re-sending content that was already
+     * sent by the paste event handler.
+     *
+     * @private
+     * @type {!boolean}
+     */
+    var pasteJustHandled = false;
+
+    /**
+     * Timestamp of the last paste operation. Used to prevent duplicate
+     * handling of paste content within a short time window.
+     *
+     * @private
+     * @type {!number}
+     */
+    var lastPasteTime = 0;
+
+    /**
+     * Time window in milliseconds during which input events after a paste
+     * should be ignored to prevent duplicate content.
+     *
+     * @private
+     * @constant
+     * @type {!number}
+     */
+    var PASTE_DEBOUNCE_MS = 100;
         
     /**
      * The state of every key, indexed by keysym. If a particular key is
@@ -906,7 +944,16 @@ Guacamole.Keyboard = function Keyboard(element) {
          *     The Unicode codepoint of the character to type.
          */
         var typeChar = function typeChar(codepoint) {
-            var keysym = keysym_from_charcode(codepoint);
+            var keysym;
+            
+            // Handle newline characters specially - use Return key instead of Linefeed
+            // This is more compatible with terminal behavior
+            if (codepoint === 0x0A || codepoint === 0x0D) {
+                keysym = 0xFF0D; // Return/Enter key
+            } else {
+                keysym = keysym_from_charcode(codepoint);
+            }
+            
             guac_keyboard.press(keysym);
             guac_keyboard.release(keysym);
         };
@@ -1353,6 +1400,24 @@ Guacamole.Keyboard = function Keyboard(element) {
      */
     this.listenTo = function listenTo(element) {
 
+        /**
+         * Checks if the given keyboard event represents a paste shortcut
+         * (Ctrl+V or Cmd+V).
+         *
+         * @private
+         * @param {!KeyboardEvent} e
+         *     The keyboard event to check.
+         *
+         * @returns {!boolean}
+         *     true if this is a paste shortcut, false otherwise.
+         */
+        var isPasteShortcut = function isPasteShortcut(e) {
+            // Check for Ctrl+V or Cmd+V (Mac)
+            var isCtrlOrCmd = e.ctrlKey || e.metaKey;
+            var isV = e.key === 'v' || e.key === 'V' || e.keyCode === 86;
+            return isCtrlOrCmd && isV;
+        };
+
         // When key pressed
         element.addEventListener("keydown", function(e) {
 
@@ -1361,6 +1426,16 @@ Guacamole.Keyboard = function Keyboard(element) {
 
             // Ignore events which have already been handled
             if (!markEvent(e)) return;
+
+            // If this is a paste shortcut (Ctrl+V or Cmd+V), do not send it
+            // to the remote. The paste event handler will send the actual
+            // clipboard content with bracketed paste mode support.
+            if (isPasteShortcut(e)) {
+                pendingPaste = true;
+                // Allow the browser's default paste behavior to trigger
+                // the paste event, which we will handle separately
+                return;
+            }
 
             var keydownEvent = new KeydownEvent(e);
 
@@ -1406,6 +1481,13 @@ Guacamole.Keyboard = function Keyboard(element) {
             // Ignore events which have already been handled
             if (!markEvent(e)) return;
 
+            // If this was part of a paste operation (V key release after Ctrl+V),
+            // ignore it to avoid sending spurious keyup events
+            if (pendingPaste && (e.key === 'v' || e.key === 'V' || e.keyCode === 86)) {
+                pendingPaste = false;
+                return;
+            }
+
             e.preventDefault();
 
             // Log event, call for interpretation
@@ -1428,6 +1510,26 @@ Guacamole.Keyboard = function Keyboard(element) {
 
             // Ignore events which have already been handled
             if (!markEvent(e)) return;
+
+            // If paste was just handled, skip this input event to avoid
+            // sending the same content twice
+            if (pasteJustHandled) {
+                pasteJustHandled = false;
+                return;
+            }
+
+            // Skip input events that are paste operations - these are handled
+            // by the paste event handler with bracketed paste mode support
+            if (e.inputType === 'insertFromPaste' || 
+                e.inputType === 'insertFromPasteAsQuotation') {
+                return;
+            }
+
+            // Skip input events that occur shortly after a paste operation
+            // to handle cases where inputType is not correctly set
+            if (Date.now() - lastPasteTime < PASTE_DEBOUNCE_MS) {
+                return;
+            }
 
             // Type all content written
             if (e.data && !e.isComposing)
@@ -1474,8 +1576,59 @@ Guacamole.Keyboard = function Keyboard(element) {
 
         };
 
+        /**
+         * Handles the given "paste" event, typing the pasted text content.
+         * This ensures that pasted text is sent through the type() function
+         * with bracketed paste mode support, rather than relying on the remote
+         * system to handle Ctrl+V.
+         *
+         * @private
+         * @param {!ClipboardEvent} e
+         *     The "paste" event to handle.
+         */
+        var handlePaste = function handlePaste(e) {
+
+            // Only intercept if handler set
+            if (!guac_keyboard.onkeydown && !guac_keyboard.onkeyup) return;
+
+            // Ignore events which have already been handled
+            if (!markEvent(e)) return;
+
+            // Only handle paste if it was triggered by Ctrl+V/Cmd+V (pendingPaste is true)
+            // Right-click paste doesn't work correctly, so we disable it
+            if (!pendingPaste) {
+                // Block right-click paste to prevent broken behavior
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
+
+            // Reset pendingPaste flag
+            pendingPaste = false;
+
+            // Get pasted text from clipboard
+            var clipboardData = e.clipboardData || window.clipboardData;
+            if (clipboardData) {
+                var pastedText = clipboardData.getData('text');
+                if (pastedText) {
+                    // Prevent default paste behavior FIRST to avoid double-paste
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Mark that paste was handled to prevent input event from
+                    // re-sending the same content
+                    pasteJustHandled = true;
+                    lastPasteTime = Date.now();
+                    // Type the pasted content (with bracketed paste mode for multi-line)
+                    guac_keyboard.type(pastedText);
+                }
+            }
+
+        };
+
         // Automatically type text entered into the wrapped field
         element.addEventListener("input", handleInput, false);
+        // Use capture phase (true) for paste to catch it before any other handlers
+        element.addEventListener("paste", handlePaste, true);
         element.addEventListener("compositionend", handleCompositionEnd, false);
         element.addEventListener("compositionstart", handleCompositionStart, false);
 

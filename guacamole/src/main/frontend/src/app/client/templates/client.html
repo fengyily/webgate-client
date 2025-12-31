@@ -252,4 +252,25 @@
         </div>
     </div>
 
+    <!-- Custom Context Menu -->
+    <div id="guac-context-menu" class="context-menu" 
+         ng-show="contextMenu.visible"
+         ng-style="{'left': contextMenu.x + 'px', 'top': contextMenu.y + 'px'}">
+        <ul class="context-menu-list">
+            <li class="context-menu-item" ng-click="contextMenuCopy()">
+                <span class="context-menu-icon">📋</span>
+                {{'CLIENT.ACTION_COPY' | translate}}
+            </li>
+            <li class="context-menu-item" ng-click="contextMenuPaste()">
+                <span class="context-menu-icon">📄</span>
+                {{'CLIENT.ACTION_PASTE' | translate}}
+            </li>
+            <li class="context-menu-separator"></li>
+            <li class="context-menu-item" ng-click="contextMenuClearScreen()">
+                <span class="context-menu-icon">🧹</span>
+                {{'CLIENT.ACTION_CLEAR_SCREEN' | translate}}
+            </li>
+        </ul>
+    </div>
+
 </guac-viewport>
