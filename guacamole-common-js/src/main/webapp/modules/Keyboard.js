@@ -889,24 +889,59 @@ Guacamole.Keyboard = function Keyboard(element) {
 
     /**
      * Presses and releases the keys necessary to type the given string of
-     * text.
+     * text. For multi-line text (paste operations), bracketed paste mode
+     * escape sequences are sent to prevent terminal auto-indent and
+     * comment continuation.
      *
      * @param {!string} str
      *     The string to type.
      */
     this.type = function type(str) {
 
-        // Press/release the key corresponding to each character in the string
-        for (var i = 0; i < str.length; i++) {
-
-            // Determine keysym of current character
-            var codepoint = str.codePointAt ? str.codePointAt(i) : str.charCodeAt(i);
+        /**
+         * Types a single character by pressing and releasing its corresponding key.
+         *
+         * @private
+         * @param {!number} codepoint
+         *     The Unicode codepoint of the character to type.
+         */
+        var typeChar = function typeChar(codepoint) {
             var keysym = keysym_from_charcode(codepoint);
-
-            // Press and release key for current character
             guac_keyboard.press(keysym);
             guac_keyboard.release(keysym);
+        };
 
+        /**
+         * Types a string by pressing and releasing keys for each character.
+         *
+         * @private
+         * @param {!string} s
+         *     The string to type.
+         */
+        var typeString = function typeString(s) {
+            for (var i = 0; i < s.length; i++) {
+                var codepoint = s.codePointAt ? s.codePointAt(i) : s.charCodeAt(i);
+                typeChar(codepoint);
+            }
+        };
+
+        // Check if the string contains newlines (indicating a paste operation)
+        var isMultiLine = str.indexOf('\n') !== -1 || str.indexOf('\r') !== -1;
+
+        if (isMultiLine) {
+            // Send bracketed paste start sequence: ESC[200~
+            typeChar(0x1B); // ESC
+            typeString('[200~');
+
+            // Type the actual content
+            typeString(str);
+
+            // Send bracketed paste end sequence: ESC[201~
+            typeChar(0x1B); // ESC
+            typeString('[201~');
+        } else {
+            // For single-line text, type normally without bracketed paste
+            typeString(str);
         }
 
     };
