@@ -236,6 +236,25 @@ angular.module('client').directive('guacClient', [function guacClient() {
             if (!client || !display)
                 return;
 
+            // Intercept right-click to show context menu instead of sending to remote
+            if (event.type === 'mousedown' && event.state.right) {
+                event.stopPropagation();
+                event.preventDefault();
+                // Broadcast a custom event for the context menu
+                $rootScope.$broadcast('guacContextMenu', {
+                    x: event.state.x + displayContainer.getBoundingClientRect().left,
+                    y: event.state.y + displayContainer.getBoundingClientRect().top
+                });
+                return;
+            }
+
+            // Ignore right-click release to avoid sending partial mouse state
+            if (event.type === 'mouseup' && event.state.right) {
+                event.stopPropagation();
+                event.preventDefault();
+                return;
+            }
+
             event.stopPropagation();
             event.preventDefault();
 

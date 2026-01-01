@@ -210,11 +210,63 @@ angular.module('client').controller('clientController', ['$scope', '$routeParams
         // Read from local clipboard and send to remote
         if (navigator.clipboard && navigator.clipboard.readText) {
             navigator.clipboard.readText().then(function(text) {
-                if (text && $scope.focusedClient) {
-                    // Use the keyboard's type function with bracketed paste
-                    var keyboard = $injector.get('$document')[0]._guacKeyboard;
-                    if (keyboard && keyboard.type) {
-                        keyboard.type(text);
+                if (text && $scope.focusedClient && $scope.focusedClient.client) {
+                    // Send each character as keyboard events with bracketed paste
+                    var client = $scope.focusedClient.client;
+                    
+                    // Check if multi-line (needs bracketed paste)
+                    var isMultiLine = text.indexOf('\n') !== -1 || text.indexOf('\r') !== -1;
+                    
+                    // Helper to send a keysym
+                    var sendKey = function(keysym) {
+                        client.sendKeyEvent(1, keysym);
+                        client.sendKeyEvent(0, keysym);
+                    };
+                    
+                    // Helper to get keysym from codepoint
+                    var getKeysym = function(codepoint) {
+                        if (codepoint === 0x0A || codepoint === 0x0D) {
+                            return 0xFF0D; // Return key
+                        }
+                        if (codepoint <= 0x1F || (codepoint >= 0x7F && codepoint <= 0x9F)) {
+                            return 0xFF00 | codepoint;
+                        }
+                        if (codepoint >= 0x0000 && codepoint <= 0x00FF) {
+                            return codepoint;
+                        }
+                        if (codepoint >= 0x0100 && codepoint <= 0x10FFFF) {
+                            return 0x01000000 | codepoint;
+                        }
+                        return null;
+                    };
+                    
+                    if (isMultiLine) {
+                        // Send bracketed paste start: ESC[200~
+                        sendKey(0xFF1B); // ESC
+                        sendKey(getKeysym(0x5B)); // [
+                        sendKey(getKeysym(0x32)); // 2
+                        sendKey(getKeysym(0x30)); // 0
+                        sendKey(getKeysym(0x30)); // 0
+                        sendKey(getKeysym(0x7E)); // ~
+                    }
+                    
+                    // Send each character
+                    for (var i = 0; i < text.length; i++) {
+                        var codepoint = text.charCodeAt(i);
+                        var keysym = getKeysym(codepoint);
+                        if (keysym) {
+                            sendKey(keysym);
+                        }
+                    }
+                    
+                    if (isMultiLine) {
+                        // Send bracketed paste end: ESC[201~
+                        sendKey(0xFF1B); // ESC
+                        sendKey(getKeysym(0x5B)); // [
+                        sendKey(getKeysym(0x32)); // 2
+                        sendKey(getKeysym(0x30)); // 0
+                        sendKey(getKeysym(0x31)); // 1
+                        sendKey(getKeysym(0x7E)); // ~
                     }
                 }
             }).catch(function(err) {
@@ -240,7 +292,7 @@ angular.module('client').controller('clientController', ['$scope', '$routeParams
         }
     };
 
-    // Handle right-click to show context menu
+    // Handle right-click to show context menu (for areas outside the display)
     document.addEventListener('contextmenu', function(e) {
         // Only show context menu when client is focused
         if ($scope.focusedClient && $scope.focusedClient.clientProperties.focused) {
@@ -249,6 +301,11 @@ angular.module('client').controller('clientController', ['$scope', '$routeParams
                 $scope.showContextMenu(e.clientX, e.clientY);
             });
         }
+    });
+
+    // Handle right-click events from within the Guacamole display
+    $scope.$on('guacContextMenu', function(event, data) {
+        $scope.showContextMenu(data.x, data.y);
     });
 
     // Hide context menu when clicking elsewhere
