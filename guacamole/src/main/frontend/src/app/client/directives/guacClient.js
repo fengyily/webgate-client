@@ -221,6 +221,16 @@ angular.module('client').directive('guacClient', [function guacClient() {
         };
 
         /**
+         * Flag to track if we intercepted a right-click mousedown event.
+         * This is needed because Mouse.js sets state.right = false BEFORE
+         * dispatching the mouseup event, so we can't rely on event.state.right
+         * to detect right-click release.
+         *
+         * @type {boolean}
+         */
+        let rightClickIntercepted = false;
+
+        /**
          * Handles a mouse event originating from the user's actual mouse.
          * This differs from handleEmulatedMouseEvent() in that the
          * software mouse cursor must be shown only if the user's browser
@@ -240,6 +250,7 @@ angular.module('client').directive('guacClient', [function guacClient() {
             if (event.type === 'mousedown' && event.state.right) {
                 event.stopPropagation();
                 event.preventDefault();
+                rightClickIntercepted = true;
                 // Broadcast a custom event for the context menu
                 $rootScope.$broadcast('guacContextMenu', {
                     x: event.state.x + displayContainer.getBoundingClientRect().left,
@@ -249,9 +260,13 @@ angular.module('client').directive('guacClient', [function guacClient() {
             }
 
             // Ignore right-click release to avoid sending partial mouse state
-            if (event.type === 'mouseup' && event.state.right) {
+            // Note: We check rightClickIntercepted flag because Mouse.js sets
+            // state.right = false BEFORE dispatching mouseup, so event.state.right
+            // is always false for right-button mouseup events
+            if (event.type === 'mouseup' && rightClickIntercepted) {
                 event.stopPropagation();
                 event.preventDefault();
+                rightClickIntercepted = false;
                 return;
             }
 

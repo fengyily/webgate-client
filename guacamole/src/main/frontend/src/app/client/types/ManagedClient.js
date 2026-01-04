@@ -160,6 +160,15 @@ angular.module('client').factory('ManagedClient', ['$rootScope', '$injector',
         this.title = template.title;
 
         /**
+         * The terminal title sent by the remote server via OSC escape sequences.
+         * This is kept separate from 'title' to prevent the remote terminal
+         * from overriding the original connection name (appname).
+         *
+         * @type String
+         */
+        this.terminalTitle = template.terminalTitle || null;
+
+        /**
          * The name which uniquely identifies the protocol of the connection in
          * use. If the protocol cannot be determined, such as when a connection
          * group is in use, this will be null.
@@ -699,9 +708,12 @@ angular.module('client').factory('ManagedClient', ['$rootScope', '$injector',
         };
 
         // Update title when a "name" instruction is received
+        // 注意：不再更新 title，保持原来设置的连接名称
+        // 这样可以防止 SSH 连接后远程终端发送的标题（如 ubuntu@hostname: ~）覆盖原来的 appname
         client.onname = function clientNameReceived(name) {
+            // 只更新 terminalTitle，不覆盖页面标题
             $rootScope.$apply(function updateClientTitle() {
-                managedClient.title = name;
+                managedClient.terminalTitle = name;
             });
         };
 
