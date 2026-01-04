@@ -274,7 +274,8 @@ angular.module('index').controller('indexController', ['$scope', '$injector',
 
     // Attempt to read the clipboard if it may have changed
     $window.addEventListener('load',  clipboardService.resyncClipboard, true);
-    $window.addEventListener('copy',  clipboardService.resyncClipboard);
+    // Note: copy/cut events are no longer used for remote clipboard sync
+    // Copy is handled directly in guacClient.js via guacKeydown event
     $window.addEventListener('cut',   clipboardService.resyncClipboard);
     $window.addEventListener('focus', function focusGained(e) {
 

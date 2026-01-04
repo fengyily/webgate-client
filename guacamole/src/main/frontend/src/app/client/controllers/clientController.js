@@ -184,10 +184,12 @@ angular.module('client').controller('clientController', ['$scope', '$routeParams
     };
 
     /**
-     * Hides the context menu.
+     * Hides the context menu and restores keyboard focus.
      */
     $scope.hideContextMenu = function hideContextMenu() {
         $scope.contextMenu.visible = false;
+        // Restore focus to document body so InputSink can capture keyboard events
+        document.body.focus();
     };
 
     /**
@@ -196,8 +198,23 @@ angular.module('client').controller('clientController', ['$scope', '$routeParams
      */
     $scope.contextMenuCopy = function contextMenuCopy() {
         $scope.hideContextMenu();
-        // The clipboard is already synced via guacClipboard events
-        // Just show a brief notification or do nothing
+        
+        // Get remote clipboard content and copy to local clipboard
+        if ($scope.focusedClient && $scope.focusedClient.remoteClipboard) {
+            var remoteClipboard = $scope.focusedClient.remoteClipboard;
+            
+            // Only handle text data
+            if (typeof remoteClipboard.data === 'string') {
+                // Use Clipboard API to write to local clipboard
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(remoteClipboard.data).then(function() {
+                        console.log('Copied to local clipboard');
+                    }).catch(function(err) {
+                        console.warn('Failed to copy to clipboard:', err);
+                    });
+                }
+            }
+        }
     };
 
     /**
@@ -207,72 +224,118 @@ angular.module('client').controller('clientController', ['$scope', '$routeParams
     $scope.contextMenuPaste = function contextMenuPaste() {
         $scope.hideContextMenu();
         
-        // Read from local clipboard and send to remote
-        if (navigator.clipboard && navigator.clipboard.readText) {
-            navigator.clipboard.readText().then(function(text) {
-                if (text && $scope.focusedClient && $scope.focusedClient.client) {
-                    // Send each character as keyboard events with bracketed paste
-                    var client = $scope.focusedClient.client;
-                    
-                    // Check if multi-line (needs bracketed paste)
-                    var isMultiLine = text.indexOf('\n') !== -1 || text.indexOf('\r') !== -1;
-                    
-                    // Helper to send a keysym
-                    var sendKey = function(keysym) {
-                        client.sendKeyEvent(1, keysym);
-                        client.sendKeyEvent(0, keysym);
-                    };
-                    
-                    // Helper to get keysym from codepoint
-                    var getKeysym = function(codepoint) {
-                        if (codepoint === 0x0A || codepoint === 0x0D) {
-                            return 0xFF0D; // Return key
-                        }
-                        if (codepoint <= 0x1F || (codepoint >= 0x7F && codepoint <= 0x9F)) {
-                            return 0xFF00 | codepoint;
-                        }
-                        if (codepoint >= 0x0000 && codepoint <= 0x00FF) {
-                            return codepoint;
-                        }
-                        if (codepoint >= 0x0100 && codepoint <= 0x10FFFF) {
-                            return 0x01000000 | codepoint;
-                        }
-                        return null;
-                    };
-                    
-                    if (isMultiLine) {
-                        // Send bracketed paste start: ESC[200~
-                        sendKey(0xFF1B); // ESC
-                        sendKey(getKeysym(0x5B)); // [
-                        sendKey(getKeysym(0x32)); // 2
-                        sendKey(getKeysym(0x30)); // 0
-                        sendKey(getKeysym(0x30)); // 0
-                        sendKey(getKeysym(0x7E)); // ~
-                    }
-                    
-                    // Send each character
-                    for (var i = 0; i < text.length; i++) {
-                        var codepoint = text.charCodeAt(i);
-                        var keysym = getKeysym(codepoint);
-                        if (keysym) {
-                            sendKey(keysym);
-                        }
-                    }
-                    
-                    if (isMultiLine) {
-                        // Send bracketed paste end: ESC[201~
-                        sendKey(0xFF1B); // ESC
-                        sendKey(getKeysym(0x5B)); // [
-                        sendKey(getKeysym(0x32)); // 2
-                        sendKey(getKeysym(0x30)); // 0
-                        sendKey(getKeysym(0x31)); // 1
-                        sendKey(getKeysym(0x7E)); // ~
-                    }
+        // Use clipboardService for more reliable clipboard access
+        clipboardService.getClipboard().then(function(clipboardData) {
+            if (!clipboardData || !clipboardData.data) {
+                console.warn('No clipboard data available');
+                return;
+            }
+            
+            // Only handle text data
+            if (typeof clipboardData.data !== 'string') {
+                console.warn('Clipboard contains non-text data');
+                return;
+            }
+            
+            var text = clipboardData.data;
+            
+            if (!$scope.focusedClient || !$scope.focusedClient.client) {
+                console.warn('No focused client available for paste');
+                return;
+            }
+            
+            var client = $scope.focusedClient.client;
+            
+            // Helper to get keysym from codepoint
+            var getKeysym = function(codepoint) {
+                if (codepoint === 0x0A || codepoint === 0x0D) {
+                    return 0xFF0D; // Return key
                 }
-            }).catch(function(err) {
-                console.warn('Failed to read clipboard:', err);
-            });
-        }
+                if (codepoint <= 0x1F || (codepoint >= 0x7F && codepoint <= 0x9F)) {
+                    return 0xFF00 | codepoint;
+                }
+                if (codepoint >= 0x0000 && codepoint <= 0x00FF) {
+                    return codepoint;
+                }
+                if (codepoint >= 0x0100 && codepoint <= 0x10FFFF) {
+                    return 0x01000000 | codepoint;
+                }
+                return null;
+            };
+            
+            // Helper to send a keysym with press and release
+            var sendKey = function(keysym) {
+                client.sendKeyEvent(1, keysym);
+                client.sendKeyEvent(0, keysym);
+            };
+            
+            // Check if multi-line (needs bracketed paste for terminals that support it)
+            var isMultiLine = text.indexOf('\n') !== -1 || text.indexOf('\r') !== -1;
+            
+            // Convert to array of keysyms first to avoid issues during iteration
+            var keysyms = [];
+            for (var i = 0; i < text.length; i++) {
+                var codepoint = text.charCodeAt(i);
+                var keysym = getKeysym(codepoint);
+                if (keysym) {
+                    keysyms.push(keysym);
+                }
+            }
+            
+            // Send keys with small batches to avoid overwhelming the connection
+            var batchSize = 10;
+            var delay = 5; // ms between batches
+            var index = 0;
+            
+            var sendBracketedPasteStart = function() {
+                if (isMultiLine) {
+                    // Send bracketed paste start: ESC[200~
+                    sendKey(0xFF1B); // ESC
+                    sendKey(0x5B);   // [
+                    sendKey(0x32);   // 2
+                    sendKey(0x30);   // 0
+                    sendKey(0x30);   // 0
+                    sendKey(0x7E);   // ~
+                }
+            };
+            
+            var sendBracketedPasteEnd = function() {
+                if (isMultiLine) {
+                    // Send bracketed paste end: ESC[201~
+                    sendKey(0xFF1B); // ESC
+                    sendKey(0x5B);   // [
+                    sendKey(0x32);   // 2
+                    sendKey(0x30);   // 0
+                    sendKey(0x31);   // 1
+                    sendKey(0x7E);   // ~
+                }
+            };
+            
+            var sendNextBatch = function() {
+                var endIndex = Math.min(index + batchSize, keysyms.length);
+                
+                for (var j = index; j < endIndex; j++) {
+                    sendKey(keysyms[j]);
+                }
+                
+                index = endIndex;
+                
+                if (index < keysyms.length) {
+                    // Schedule next batch
+                    setTimeout(sendNextBatch, delay);
+                } else {
+                    // All done, send bracketed paste end
+                    sendBracketedPasteEnd();
+                }
+            };
+            
+            // Start sending
+            sendBracketedPasteStart();
+            sendNextBatch();
+            
+        }).catch(function(err) {
+            console.warn('Failed to read clipboard:', err);
+        });
     };
 
     /**
@@ -304,8 +367,13 @@ angular.module('client').controller('clientController', ['$scope', '$routeParams
     });
 
     // Handle right-click events from within the Guacamole display
+    // Note: This event comes from outside Angular (mouse event handler),
+    // so we need to trigger digest cycle and update the UI.
+    // Use $applyAsync to avoid "already in progress" errors if called during digest
     $scope.$on('guacContextMenu', function(event, data) {
-        $scope.showContextMenu(data.x, data.y);
+        $scope.$applyAsync(function() {
+            $scope.showContextMenu(data.x, data.y);
+        });
     });
 
     // Hide context menu when clicking elsewhere

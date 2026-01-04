@@ -214,6 +214,15 @@ angular.module('client').factory('ManagedClient', ['$rootScope', '$injector',
         this.uploads = template.uploads || [];
 
         /**
+         * The most recent clipboard data received from the remote server.
+         * This is stored here for manual copy via the context menu, rather
+         * than auto-syncing to the local clipboard.
+         *
+         * @type ClipboardData
+         */
+        this.remoteClipboard = template.remoteClipboard || null;
+
+        /**
          * All currently-exposed filesystems. When the Guacamole server exposes
          * a filesystem object, that object will be made available as a
          * ManagedFilesystem within this array.
@@ -661,7 +670,9 @@ angular.module('client').factory('ManagedClient', ['$rootScope', '$injector',
 
         };
 
-        // Handle any received clipboard data
+        // Handle any received clipboard data from remote
+        // Store in managedClient.remoteClipboard for Ctrl+C/context menu copy
+        // Do NOT auto-sync to local system clipboard (user complained about auto-copy)
         client.onclipboard = function clientClipboardReceived(stream, mimetype) {
 
             var reader;
@@ -677,13 +688,18 @@ angular.module('client').factory('ManagedClient', ['$rootScope', '$injector',
                     data += text;
                 };
 
-                // Set clipboard contents once stream is finished
+                // Store clipboard contents in managedClient
                 reader.onend = function textComplete() {
-                    clipboardService.setClipboard(new ClipboardData({
+                    var clipboardData = new ClipboardData({
                         source : managedClient.id,
                         type : mimetype,
                         data : data
-                    }))['catch'](angular.noop);
+                    });
+                    managedClient.remoteClipboard = clipboardData;
+                    
+                    // Also broadcast event so other components can react
+                    // (but don't auto-copy to system clipboard)
+                    $rootScope.$broadcast('guacRemoteClipboard', clipboardData);
                 };
 
             }
@@ -692,11 +708,13 @@ angular.module('client').factory('ManagedClient', ['$rootScope', '$injector',
             else {
                 reader = new Guacamole.BlobReader(stream, mimetype);
                 reader.onend = function blobComplete() {
-                    clipboardService.setClipboard(new ClipboardData({
+                    var clipboardData = new ClipboardData({
                         source : managedClient.id,
                         type : mimetype,
                         data : reader.getBlob()
-                    }))['catch'](angular.noop);
+                    });
+                    managedClient.remoteClipboard = clipboardData;
+                    $rootScope.$broadcast('guacRemoteClipboard', clipboardData);
                 };
             }
 

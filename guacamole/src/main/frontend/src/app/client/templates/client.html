@@ -253,9 +253,11 @@
     </div>
 
     <!-- Custom Context Menu -->
+    <!-- mousedown preventDefault stops focus from shifting to menu element -->
     <div id="guac-context-menu" class="context-menu" 
          ng-show="contextMenu.visible"
-         ng-style="{'left': contextMenu.x + 'px', 'top': contextMenu.y + 'px'}">
+         ng-style="{'left': contextMenu.x + 'px', 'top': contextMenu.y + 'px'}"
+         ng-mousedown="$event.preventDefault()">
         <ul class="context-menu-list">
             <li class="context-menu-item" ng-click="contextMenuCopy()">
                 <span class="context-menu-icon">📋</span>

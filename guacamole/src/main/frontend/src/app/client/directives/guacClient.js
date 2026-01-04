@@ -231,6 +231,16 @@ angular.module('client').directive('guacClient', [function guacClient() {
         let rightClickIntercepted = false;
 
         /**
+         * Checks if the current connection is an SSH connection.
+         * @returns {boolean} true if SSH protocol
+         */
+        const isSSHProtocol = function() {
+            var protocol = $scope.client && $scope.client.protocol;
+            // Also check for telnet as it behaves similarly to SSH
+            return protocol === 'ssh' || protocol === 'telnet';
+        };
+
+        /**
          * Handles a mouse event originating from the user's actual mouse.
          * This differs from handleEmulatedMouseEvent() in that the
          * software mouse cursor must be shown only if the user's browser
@@ -246,8 +256,9 @@ angular.module('client').directive('guacClient', [function guacClient() {
             if (!client || !display)
                 return;
 
-            // Intercept right-click to show context menu instead of sending to remote
-            if (event.type === 'mousedown' && event.state.right) {
+            // Only intercept right-click for SSH connections to show custom context menu
+            // RDP/VNC should use the remote system's native context menu
+            if (event.type === 'mousedown' && event.state.right && isSSHProtocol()) {
                 event.stopPropagation();
                 event.preventDefault();
                 rightClickIntercepted = true;
@@ -259,10 +270,7 @@ angular.module('client').directive('guacClient', [function guacClient() {
                 return;
             }
 
-            // Ignore right-click release to avoid sending partial mouse state
-            // Note: We check rightClickIntercepted flag because Mouse.js sets
-            // state.right = false BEFORE dispatching mouseup, so event.state.right
-            // is always false for right-button mouseup events
+            // Ignore right-click release to avoid sending partial mouse state (SSH only)
             if (event.type === 'mouseup' && rightClickIntercepted) {
                 event.stopPropagation();
                 event.preventDefault();
@@ -607,9 +615,102 @@ angular.module('client').directive('guacClient', [function guacClient() {
             ManagedClient.setClipboard($scope.client, data);
         });
 
+        /**
+         * Track modifier key states for copy detection.
+         */
+        let ctrlPressed = false;
+        let metaPressed = false;
+
+        /**
+         * Checks if there is remote clipboard content available.
+         * @returns {boolean} true if remote clipboard has content
+         */
+        const hasRemoteClipboardContent = function() {
+            return $scope.client && 
+                   $scope.client.remoteClipboard && 
+                   typeof $scope.client.remoteClipboard.data === 'string' && 
+                   $scope.client.remoteClipboard.data.length > 0;
+        };
+
+        /**
+         * Copies remote clipboard content to local clipboard.
+         * @returns {Promise} resolves when copy is complete
+         */
+        const copyRemoteClipboardToLocal = function() {
+            if (hasRemoteClipboardContent()) {
+                var data = $scope.client.remoteClipboard.data;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    return navigator.clipboard.writeText(data);
+                }
+            }
+            return Promise.reject('No content to copy');
+        };
+
+        /**
+         * Sends an interrupt signal (SIGINT / Ctrl+C) to the remote.
+         * This explicitly sends the ETX control character (0x03) to ensure
+         * reliable interrupt delivery regardless of how the browser generated
+         * the original keysym.
+         */
+        const sendInterrupt = function() {
+            // ETX keysym = 0xFF03 (control character keysym for 0x03)
+            // We need to send: Ctrl down, ETX, Ctrl up
+            // But Ctrl may already be held down by the user, so we just send ETX
+            
+            // Send ETX control character (ASCII 0x03 -> keysym 0xFF03)
+            client.sendKeyEvent(1, 0xFF03);  // keydown ETX
+            client.sendKeyEvent(0, 0xFF03);  // keyup ETX
+            
+            console.log('Sent interrupt signal (ETX 0xFF03)');
+        };
+
         // Translate local keydown events to remote keydown events if keyboard is enabled
+        // 
+        // Copy logic (same for Mac and Windows, same for SSH and RDP):
+        //   Ctrl+C / CMD+C: 
+        //     - If has content -> copy to local clipboard, DON'T send to remote
+        //     - If no content -> send interrupt signal (ETX) to remote
+        //   Ctrl+V / CMD+V:
+        //     - Handled by Keyboard.js paste event
+        //
         $scope.$on('guacKeydown', function keydownListener(event, keysym, keyboard) {
             if ($scope.client.clientProperties.focused) {
+                
+                // Track Ctrl key state (Left Ctrl: 0xFFE3, Right Ctrl: 0xFFE4)
+                if (keysym === 0xFFE3 || keysym === 0xFFE4) {
+                    ctrlPressed = true;
+                }
+                
+                // Track Meta/CMD key state (Left Meta: 0xFFE7, Right Meta: 0xFFE8, Super: 0xFFEB, 0xFFEC)
+                if (keysym === 0xFFE7 || keysym === 0xFFE8 || keysym === 0xFFEB || keysym === 0xFFEC) {
+                    metaPressed = true;
+                }
+                
+                // Detect Ctrl+C or CMD+C
+                // C key: c=0x0063, C=0x0043; Control char: ETX=0x03 or 0xFF03
+                var isCKey = (keysym === 0x0063 || keysym === 0x0043);
+                var isCtrlCChar = (keysym === 0x03 || keysym === 0xFF03);
+                var copyModifierPressed = ctrlPressed || metaPressed;
+                var isCopyShortcut = (copyModifierPressed && isCKey) || isCtrlCChar;
+                
+                if (isCopyShortcut) {
+                    // If there's content to copy -> copy and don't send to remote
+                    if (hasRemoteClipboardContent()) {
+                        copyRemoteClipboardToLocal().then(function() {
+                            console.log('Copied to local clipboard');
+                        }).catch(function(err) {
+                            console.warn('Copy failed:', err);
+                        });
+                        event.preventDefault();
+                        return;  // Don't send Ctrl+C/CMD+C to remote
+                    }
+                    
+                    // No content -> send explicit interrupt signal
+                    sendInterrupt();
+                    event.preventDefault();
+                    return;  // Don't send the original keysym
+                }
+                
                 client.sendKeyEvent(1, keysym);
                 event.preventDefault();
             }
@@ -618,6 +719,17 @@ angular.module('client').directive('guacClient', [function guacClient() {
         // Translate local keyup events to remote keyup events if keyboard is enabled
         $scope.$on('guacKeyup', function keyupListener(event, keysym, keyboard) {
             if ($scope.client.clientProperties.focused) {
+                
+                // Track Ctrl key release
+                if (keysym === 0xFFE3 || keysym === 0xFFE4) {
+                    ctrlPressed = false;
+                }
+                
+                // Track Meta/CMD key release
+                if (keysym === 0xFFE7 || keysym === 0xFFE8 || keysym === 0xFFEB || keysym === 0xFFEC) {
+                    metaPressed = false;
+                }
+                
                 client.sendKeyEvent(0, keysym);
                 event.preventDefault();
             }   
