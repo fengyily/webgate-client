@@ -633,6 +633,17 @@ angular.module('client').directive('guacClient', [function guacClient() {
         };
 
         /**
+         * Clears the remote clipboard content. This is called after a
+         * successful Ctrl+C copy operation to ensure that the next Ctrl+C
+         * will send an interrupt signal instead of copying the same content.
+         */
+        const clearRemoteClipboard = function() {
+            if ($scope.client) {
+                $scope.client.remoteClipboard = null;
+            }
+        };
+
+        /**
          * Copies remote clipboard content to local clipboard.
          * @returns {Promise} resolves when copy is complete
          */
@@ -648,20 +659,19 @@ angular.module('client').directive('guacClient', [function guacClient() {
 
         /**
          * Sends an interrupt signal (SIGINT / Ctrl+C) to the remote.
-         * This explicitly sends the ETX control character (0x03) to ensure
-         * reliable interrupt delivery regardless of how the browser generated
-         * the original keysym.
+         * This sends a complete Ctrl+C key sequence to ensure reliable
+         * interrupt delivery to SSH/terminal sessions.
          */
         const sendInterrupt = function() {
-            // ETX keysym = 0xFF03 (control character keysym for 0x03)
-            // We need to send: Ctrl down, ETX, Ctrl up
-            // But Ctrl may already be held down by the user, so we just send ETX
-            
-            // Send ETX control character (ASCII 0x03 -> keysym 0xFF03)
-            client.sendKeyEvent(1, 0xFF03);  // keydown ETX
-            client.sendKeyEvent(0, 0xFF03);  // keyup ETX
-            
-            console.log('Sent interrupt signal (ETX 0xFF03)');
+            // Send complete Ctrl+C sequence:
+            // 1. Ctrl down (Left Ctrl = 0xFFE3)
+            // 2. 'c' down (lowercase c = 0x0063)
+            // 3. 'c' up
+            // 4. Ctrl up
+            client.sendKeyEvent(1, 0xFFE3);  // Ctrl down
+            client.sendKeyEvent(1, 0x0063);  // 'c' down
+            client.sendKeyEvent(0, 0x0063);  // 'c' up
+            client.sendKeyEvent(0, 0xFFE3);  // Ctrl up
         };
 
         // Translate local keydown events to remote keydown events if keyboard is enabled
@@ -697,9 +707,12 @@ angular.module('client').directive('guacClient', [function guacClient() {
                     // If there's content to copy -> copy and don't send to remote
                     if (hasRemoteClipboardContent()) {
                         copyRemoteClipboardToLocal().then(function() {
-                            console.log('Copied to local clipboard');
-                        }).catch(function(err) {
-                            console.warn('Copy failed:', err);
+                            // Clear the remote clipboard after successful copy
+                            // so that next Ctrl+C will send interrupt signal
+                            clearRemoteClipboard();
+                        }).catch(function() {
+                            // Also clear on failure to avoid blocking interrupt
+                            clearRemoteClipboard();
                         });
                         event.preventDefault();
                         return;  // Don't send Ctrl+C/CMD+C to remote

@@ -364,7 +364,7 @@ Guacamole.Keyboard = function Keyboard(element) {
         // we need to pretend that this is a keydown event because we obviously
         // did not receive it (issue on macos with chrome)
         if (this.keyCode == 20 && quirks.capsLockKeyEventUnreliable) {
-          eventLog.push(new KeydownEvent(this));
+          eventLog.push(new KeydownEvent(orig));
           return;
         }
 
