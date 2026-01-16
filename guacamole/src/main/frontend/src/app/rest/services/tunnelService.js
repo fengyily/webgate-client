@@ -61,9 +61,11 @@ angular.module('rest').factory('tunnelService', ['$injector',
      * @constant
      * @type Number
      */
-    // 减小 chunk 大小以适应高延迟跨国网络环境
+    // 减小 chunk 大小以适应高延迟跨国网络环境（防止 504 Gateway Timeout）
     // 原值: 1024 * 1024 * 4 (4MB)
-    const CHUNK_SIZE = 1024 * 512;  // 512KB
+    // 网关超时约 168 秒，确保每个 chunk 在超时前完成上传
+    // 假设最低上传速度 10KB/s，168秒可传 ~1.6MB，保守使用 64KB
+    const CHUNK_SIZE = 1024 * 64;  // 64KB
 
     /**
      * Makes a request to the REST API to get the list of all tunnels
