@@ -61,7 +61,9 @@ angular.module('rest').factory('tunnelService', ['$injector',
      * @constant
      * @type Number
      */
-    const CHUNK_SIZE = 1024 * 1024 * 4;
+    // 减小 chunk 大小以适应高延迟跨国网络环境
+    // 原值: 1024 * 1024 * 4 (4MB)
+    const CHUNK_SIZE = 1024 * 512;  // 512KB
 
     /**
      * Makes a request to the REST API to get the list of all tunnels
